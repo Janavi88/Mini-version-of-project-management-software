@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TaskBoard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- ================= LOGIN / REGISTER ================= -->
+  <section id="auth">
+    <div class="auth-brand">
+      <div class="brand"><span class="logo">T</span><span>TaskBoard</span></div>
+      <h1>Plan work.<br>Ship it together.</h1>
+      <p>Projects, sprints and a Kanban board for small teams, kept simple.</p>
+    </div>
+
+    <div class="auth-form">
+      <div class="auth-card">
+        <h2>Welcome</h2>
+        <p class="auth-sub">Log in, or create an account to get started.</p>
+
+        <label for="name">Name <span class="hint">(register only)</span></label>
+        <input id="name" placeholder="Your name" autocomplete="name">
+
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+
+        <div class="row">
+          <button id="loginBtn">Login</button>
+          <button id="registerBtn" class="secondary">Register</button>
+        </div>
+        <p id="authError" class="error" role="alert"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= APP (after login) ================= -->
+  <section id="app" hidden>
+    <aside class="sidebar">
+      <div class="brand"><span class="logo">T</span><span>TaskBoard</span></div>
+      <div class="side-section grow"></div>
+      <div class="side-user">
+        <span id="whoAvatar" class="avatar"></span>
+        <span id="who"></span>
+        <button id="logoutBtn" class="ghost small">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h1>Board</h1>
+      </div>
+      <p id="appError" class="error" role="alert"></p>
+      <p class="placeholder">You are logged in. Projects and the board are added in the next tickets.</p>
+    </main>
+  </section>
+
+  <script src="/app.js"></script>
+</body>
+</html>
