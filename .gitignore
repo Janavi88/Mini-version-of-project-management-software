@@ -4,3 +4,8 @@ __pycache__/
 instance/
 *.db
 .pytest_cache/
+venv/
+__pycache__/
+*.pyc
+*.db
+.pytest_cache/
