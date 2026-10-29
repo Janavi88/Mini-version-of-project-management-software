@@ -1,5 +1,5 @@
 const $ = (id) => document.getElementById(id);
-const state = { user: null };
+const state = { user: null, projects: [], projectId: null };
 
 async function api(path, method = 'GET', payload) {
   const res = await fetch('/api' + path, {
@@ -11,6 +11,14 @@ async function api(path, method = 'GET', payload) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   return data;
+}
+
+// Use textContent rather than innerHTML to avoid treating user input as HTML.
+function el(tag, text, cls) {
+  const element = document.createElement(tag);
+  if (text !== undefined) element.textContent = text;
+  if (cls) element.className = cls;
+  return element;
 }
 
 function initials(name) {
@@ -30,6 +38,18 @@ function showApp(loggedIn) {
   $('auth').hidden = loggedIn;
   $('app').hidden = !loggedIn;
 }
+
+function fillSelect(select, options, selected) {
+  select.replaceChildren();
+  options.forEach(([value, label]) => {
+    const option = el('option', label);
+    option.value = value;
+    select.appendChild(option);
+  });
+  if (selected !== undefined) select.value = String(selected);
+}
+
+/* ---------- auth ---------- */
 
 async function authenticate(path) {
   showError('authError', null);
@@ -62,7 +82,7 @@ async function authenticate(path) {
 
     state.user = await api(path, 'POST', payload);
     showError('authError', null);
-    start();
+    await start();
   } catch (err) {
     showError('authError', err);
   } finally {
@@ -70,12 +90,72 @@ async function authenticate(path) {
   }
 }
 
-function start() {
+async function start() {
   showApp(true);
   const displayName = state.user?.name || state.user?.email || 'Signed in';
   $('who').textContent = displayName;
   $('whoAvatar').textContent = initials(displayName);
   showError('appError', null);
+  await loadProjects();
+}
+
+/* ---------- projects (TB-16) ---------- */
+
+function renderSidebar() {
+  const project = state.projects.find((p) => Number(p.id) === Number(state.projectId));
+  $('projectKey').textContent = project ? project.key : '--';
+  $('projectName').textContent = project ? project.name : 'No project';
+}
+
+async function loadProjects() {
+  try {
+    state.projects = await api('/projects');
+
+    if (!state.projects.length) {
+      state.projectId = null;
+      fillSelect($('projectSelect'), [['', 'No projects yet']]);
+      renderSidebar();
+      showError('appError', null);
+      return;
+    }
+
+    // Keep the selected project when possible; otherwise select the first project.
+    if (!state.projects.some((project) => Number(project.id) === Number(state.projectId))) {
+      state.projectId = state.projects[0].id;
+    }
+
+    fillSelect(
+      $('projectSelect'),
+      state.projects.map((project) => [project.id, `${project.key} - ${project.name}`]),
+      state.projectId
+    );
+    renderSidebar();
+    // Board ticket: load the selected project's board here.
+    showError('appError', null);
+  } catch (err) {
+    showError('appError', err);
+  }
+}
+
+async function newProject() {
+  const key = prompt('Project key (2-10 letters, for example TB)');
+  if (!key) return;
+  const cleanKey = key.trim().toUpperCase();
+  if (!/^[A-Z]{2,10}$/.test(cleanKey)) {
+    showError('appError', new Error('Project key must contain 2-10 letters.'));
+    return;
+  }
+
+  const name = prompt('Project name');
+  if (!name || !name.trim()) return;
+
+  try {
+    const project = await api('/projects', 'POST', { key: cleanKey, name: name.trim() });
+    state.projectId = project.id;
+    await loadProjects();
+  } catch (err) {
+    showError('appError', err);
+  }
 }
 
 /* ---------- events ---------- */
@@ -90,6 +170,8 @@ $('logoutBtn').onclick = async () => {
   try {
     await api('/logout', 'POST');
     state.user = null;
+    state.projects = [];
+    state.projectId = null;
     $('password').value = '';
     showError('authError', null);
     showError('appError', null);
@@ -99,11 +181,19 @@ $('logoutBtn').onclick = async () => {
   }
 };
 
+$('projectSelect').onchange = (event) => {
+  const selectedId = event.target.value;
+  state.projectId = selectedId ? Number(selectedId) : null;
+  renderSidebar();
+  // Board ticket: reload the board for the newly selected project here.
+};
+$('newProjectBtn').onclick = newProject;
+
 // If the session cookie is still valid, skip the login screen.
 (async () => {
   try {
     state.user = await api('/me');
-    start();
+    await start();
   } catch (err) {
     showApp(false);
   }
