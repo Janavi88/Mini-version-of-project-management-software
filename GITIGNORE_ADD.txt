@@ -1,0 +1,6 @@
+# add these lines to the END of the repo's existing .gitignore (if missing)
+venv/
+__pycache__/
+*.pyc
+*.db
+.pytest_cache/
