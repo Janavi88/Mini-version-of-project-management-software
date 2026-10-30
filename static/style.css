@@ -314,3 +314,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 @media (max-width: 900px) {
   #board { grid-template-columns: 1fr; }
 }
+/* ================= STATUS DROPDOWN (TB-22) ================= */
+.card-actions { display: flex; align-items: center; gap: 8px; }
+.card-actions select { flex: 1; padding: 6px 8px; font-size: 12px; }
+.card-actions select:disabled { opacity: 0.6; cursor: wait; }
