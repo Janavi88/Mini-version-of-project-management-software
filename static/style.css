@@ -227,3 +227,90 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .project-card span { color: var(--tan); font-size: 12px; overflow-wrap: anywhere; }
 
 #projectSelect { min-width: 220px; font-weight: 600; }
+/* ================= KANBAN BOARD ================= */
+#board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.column {
+  background: var(--tan-soft);
+  border-radius: var(--radius);
+  padding: 12px;
+  min-height: 220px;
+}
+
+.column-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 2px 2px 12px;
+}
+.column-head h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--coffee);
+}
+.count {
+  min-width: 24px;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--coffee);
+  font-size: 12px;
+  font-weight: 700;
+}
+.empty { color: var(--slate-gray); font-size: 12px; text-align: center; padding: 20px 0; }
+
+.card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.type-story { background: #e8dacd; color: var(--coffee); }
+.type-task  { background: #dfe5ec; color: var(--space-cadet); }
+.type-bug   { background: #ecd5d6; color: var(--caput-mortuum); }
+.type-epic  { background: #d9deea; color: var(--space-cadet); }
+
+.prio-high   { background: var(--white); border: 1px solid var(--caput-mortuum); color: var(--caput-mortuum); }
+.prio-medium { background: var(--white); border: 1px solid var(--coffee); color: var(--coffee); }
+.prio-low    { background: var(--white); border: 1px solid var(--slate-gray); color: var(--slate-gray); }
+.pts { background: var(--tan); color: var(--coffee); }
+
+.card-title { font-size: 14px; line-height: 1.4; font-weight: 600; }
+.card-key { font-size: 11px; color: var(--slate-gray); font-weight: 600; letter-spacing: 0.04em; }
+
+.card-assignee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--slate-gray);
+}
+.card-assignee .avatar { width: 24px; height: 24px; font-size: 10px; }
+.card-assignee .avatar.none { background: #dfe5ec; color: var(--slate-gray); }
+
+@media (max-width: 1200px) {
+  #board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  #board { grid-template-columns: 1fr; }
+}

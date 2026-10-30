@@ -1,4 +1,5 @@
 const $ = (id) => document.getElementById(id);
+const STATUSES = ['To Do', 'In Progress', 'In Review', 'Done'];
 const state = { user: null, projects: [], projectId: null };
 
 async function api(path, method = 'GET', payload) {
@@ -113,6 +114,7 @@ async function loadProjects() {
 
     if (!state.projects.length) {
       state.projectId = null;
+      $('board').replaceChildren();
       fillSelect($('projectSelect'), [['', 'No projects yet']]);
       renderSidebar();
       showError('appError', null);
@@ -130,8 +132,7 @@ async function loadProjects() {
       state.projectId
     );
     renderSidebar();
-    // Board ticket: load the selected project's board here.
-    showError('appError', null);
+    await loadBoard();
   } catch (err) {
     showError('appError', err);
   }
@@ -153,6 +154,66 @@ async function newProject() {
     const project = await api('/projects', 'POST', { key: cleanKey, name: name.trim() });
     state.projectId = project.id;
     await loadProjects();
+  } catch (err) {
+    showError('appError', err);
+  }
+}
+/* ---------- kanban board ---------- */
+
+function card(issue) {
+  const type = String(issue.type || 'Task');
+  const priority = String(issue.priority || 'Medium');
+  const cardElement = el('div', undefined, 'card');
+
+  const tags = el('div', undefined, 'tags');
+  tags.appendChild(el('span', type, 'pill type-' + type.toLowerCase()));
+  tags.appendChild(el('span', priority, 'pill prio-' + priority.toLowerCase()));
+  if (issue.story_points) tags.appendChild(el('span', `${issue.story_points} pts`, 'pill pts'));
+  cardElement.appendChild(tags);
+
+  cardElement.appendChild(el('h4', issue.title, 'card-title'));
+  cardElement.appendChild(el('div', issue.key, 'card-key'));
+
+  const assigneeRow = el('div', undefined, 'card-assignee');
+  if (issue.assignee) {
+    assigneeRow.appendChild(el('span', initials(issue.assignee), 'avatar'));
+    assigneeRow.appendChild(el('span', issue.assignee));
+  } else {
+    assigneeRow.appendChild(el('span', '?', 'avatar none'));
+    assigneeRow.appendChild(el('span', 'Unassigned'));
+  }
+  cardElement.appendChild(assigneeRow);
+  return cardElement;
+}
+
+async function loadBoard() {
+  const board = $('board');
+  if (!state.projectId) {
+    board.replaceChildren();
+    return;
+  }
+
+  const requestedId = state.projectId;
+  try {
+    const issues = await api(`/projects/${requestedId}/issues`);
+    // Ignore a slow response if the user already switched to another project.
+    if (requestedId !== state.projectId) return;
+
+    board.replaceChildren();
+    STATUSES.forEach((status) => {
+      const column = el('div', undefined, 'column');
+      const list = issues.filter((issue) => issue.status === status);
+
+      const head = el('div', undefined, 'column-head');
+      head.appendChild(el('h3', status));
+      head.appendChild(el('span', String(list.length), 'count'));
+      column.appendChild(head);
+
+      if (!list.length) column.appendChild(el('div', 'No issues', 'empty'));
+      list.forEach((issue) => column.appendChild(card(issue)));
+      board.appendChild(column);
+    });
+    showError('appError', null);
   } catch (err) {
     showError('appError', err);
   }
@@ -185,7 +246,7 @@ $('projectSelect').onchange = (event) => {
   const selectedId = event.target.value;
   state.projectId = selectedId ? Number(selectedId) : null;
   renderSidebar();
-  // Board ticket: reload the board for the newly selected project here.
+  loadBoard();
 };
 $('newProjectBtn').onclick = newProject;
 
