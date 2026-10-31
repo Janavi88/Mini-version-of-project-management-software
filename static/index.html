@@ -70,7 +70,48 @@
       <div id="board"></div>
     </main>
   </section>
+  <!-- Edit issue dialog (TB-18) -->
+  <dialog id="editDialog" class="dialog">
+    <div class="dialog-body">
+      <h3 id="editHeading">Edit issue</h3>
 
+      <label for="editTitle">Title</label>
+      <input id="editTitle" placeholder="Issue title">
+
+      <div class="dialog-grid">
+        <div>
+          <label for="editType">Type</label>
+          <select id="editType">
+            <option>Story</option><option>Task</option><option>Bug</option><option>Epic</option>
+          </select>
+        </div>
+        <div>
+          <label for="editPriority">Priority</label>
+          <select id="editPriority">
+            <option>High</option><option>Medium</option><option>Low</option>
+          </select>
+        </div>
+        <div>
+          <label for="editPoints">Story points</label>
+          <select id="editPoints">
+            <option value="">None</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>5</option><option>8</option><option>13</option>
+          </select>
+        </div>
+        <div>
+          <label for="editAssignee">Assignee</label>
+          <select id="editAssignee"></select>
+        </div>
+      </div>
+
+      <p id="editError" class="error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="editCancelBtn" class="secondary">Cancel</button>
+        <button id="editSaveBtn">Save changes</button>
+      </div>
+    </div>
+  </dialog>
   <script src="/app.js"></script>
 </body>
 </html>

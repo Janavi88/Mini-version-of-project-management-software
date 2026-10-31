@@ -196,6 +196,14 @@ function card(issue) {
   statusSelect.value = issue.status;
   statusSelect.onchange = () => changeStatus(issue, statusSelect);
   actions.appendChild(statusSelect);
+  
+  const editButton = el('button', 'Edit', 'secondary small');
+  editButton.onclick = () => openEdit(issue);
+  actions.appendChild(editButton);
+
+  const deleteButton = el('button', 'Delete', 'danger small');
+  deleteButton.onclick = () => deleteIssue(issue);
+  actions.appendChild(deleteButton);
   cardElement.appendChild(actions);
 
   return cardElement;
@@ -247,6 +255,83 @@ async function loadBoard() {
   }
 }
 
+/* ---------- edit and delete issue (TB-18) ---------- */
+
+let editingIssue = null;
+
+async function openEdit(issue) {
+  showError('editError', null);
+
+  // The assignee list comes from the API. If it fails we stop here, because
+  // saving with an empty list would silently unassign the issue.
+  let users;
+  try {
+    users = await api('/users');
+  } catch (err) {
+    showError('appError', err);
+    return;
+  }
+
+  editingIssue = issue;
+  $('editHeading').textContent = `Edit ${issue.key}`;
+  $('editTitle').value = issue.title;
+  $('editType').value = issue.type;
+  $('editPriority').value = issue.priority;
+  $('editPoints').value = issue.story_points ? String(issue.story_points) : '';
+
+  fillSelect($('editAssignee'), [['', 'Unassigned'], ...users.map((user) => [user.id, user.name])]);
+  const currentId = issue.assignee_id ?? users.find((user) => user.name === issue.assignee)?.id;
+  $('editAssignee').value = currentId ? String(currentId) : '';
+
+  $('editDialog').showModal();
+  $('editTitle').focus();
+}
+
+async function saveEdit() {
+  if (!editingIssue) return;
+  showError('editError', null);
+
+  const title = $('editTitle').value.trim();
+  if (!title) {
+    showError('editError', new Error('Enter an issue title.'));
+    return;
+  }
+
+  const points = $('editPoints').value;
+  const assignee = $('editAssignee').value;
+  const payload = {
+    title,
+    type: $('editType').value,
+    priority: $('editPriority').value,
+    story_points: points ? Number(points) : null,
+    assignee_id: assignee ? Number(assignee) : null,
+  };
+
+  $('editSaveBtn').disabled = true;
+  try {
+    await api('/issues/' + editingIssue.id, 'PATCH', payload);
+    $('editDialog').close();
+    await loadBoard();
+  } catch (err) {
+    // Keep the dialog open so the person can fix the value.
+    showError('editError', err);
+  } finally {
+    $('editSaveBtn').disabled = false;
+  }
+}
+
+async function deleteIssue(issue) {
+  if (!confirm(`Delete ${issue.key}: ${issue.title}?\n\nThis cannot be undone.`)) return;
+  try {
+    await api('/issues/' + issue.id, 'DELETE');
+    await loadBoard();
+  } catch (err) {
+    // Redraw first, then show the error (loadBoard clears the error line when it succeeds).
+    await loadBoard();
+    showError('appError', err);
+  }
+}
+
 /* ---------- events ---------- */
 
 $('loginBtn').onclick = () => authenticate('/login');
@@ -277,6 +362,13 @@ $('projectSelect').onchange = (event) => {
   loadBoard();
 };
 $('newProjectBtn').onclick = newProject;
+
+$('editSaveBtn').onclick = saveEdit;
+$('editCancelBtn').onclick = () => $('editDialog').close();
+$('editTitle').addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') saveEdit();
+});
+$('editDialog').addEventListener('close', () => { editingIssue = null; });
 
 // If the session cookie is still valid, skip the login screen.
 (async () => {

@@ -318,3 +318,30 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .card-actions { display: flex; align-items: center; gap: 8px; }
 .card-actions select { flex: 1; padding: 6px 8px; font-size: 12px; }
 .card-actions select:disabled { opacity: 0.6; cursor: wait; }
+
+/* ================= EDIT / DELETE ISSUE (TB-18) ================= */
+.card-actions { flex-wrap: wrap; }
+.card-actions select { flex: 1 1 100%; }
+.card-actions button { flex: 1; }
+
+button.danger { background: #ecd5d6; color: var(--caput-mortuum); }
+button.danger:hover { background: var(--caput-mortuum); color: var(--white); }
+
+.dialog {
+  border: none;
+  border-radius: 20px;
+  padding: 0;
+  width: min(480px, calc(100vw - 32px));
+  background: var(--white);
+  color: var(--space-cadet);
+  font-family: inherit;
+  box-shadow: 0 12px 40px rgba(37, 52, 79, 0.35);
+}
+.dialog::backdrop { background: rgba(37, 52, 79, 0.55); }
+.dialog-body { padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+.dialog-body h3 { font-size: 18px; margin-bottom: 6px; }
+.dialog-body label { font-size: 12px; font-weight: 600; margin-top: 6px; }
+.dialog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.dialog-grid > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.dialog-grid select { width: 100%; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
