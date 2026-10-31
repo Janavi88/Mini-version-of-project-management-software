@@ -182,8 +182,36 @@ function card(issue) {
     assigneeRow.appendChild(el('span', '?', 'avatar none'));
     assigneeRow.appendChild(el('span', 'Unassigned'));
   }
-  cardElement.appendChild(assigneeRow);
+    cardElement.appendChild(assigneeRow);
+
+  // Status dropdown (TB-22)
+  const actions = el('div', undefined, 'card-actions');
+  const statusSelect = el('select');
+  statusSelect.setAttribute('aria-label', `Status for ${issue.key}`);
+  STATUSES.forEach((status) => {
+    const option = el('option', status);
+    option.value = status;
+    statusSelect.appendChild(option);
+  });
+  statusSelect.value = issue.status;
+  statusSelect.onchange = () => changeStatus(issue, statusSelect);
+  actions.appendChild(statusSelect);
+  cardElement.appendChild(actions);
+
   return cardElement;
+}
+
+async function changeStatus(issue, select) {
+  select.disabled = true;
+  try {
+    await api('/issues/' + issue.id, 'PATCH', { status: select.value });
+    await loadBoard();
+  } catch (err) {
+    // Redraw first so the card goes back to its real column, then show the error
+    // (loadBoard clears the error line when it succeeds).
+    await loadBoard();
+    showError('appError', err);
+  }
 }
 
 async function loadBoard() {
