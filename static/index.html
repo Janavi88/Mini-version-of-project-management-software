@@ -40,11 +40,20 @@
     </div>
   </section>
 
-  <!-- ================= APP (after login) ================= -->
+    <!-- ================= APP (after login) ================= -->
   <section id="app" hidden>
     <aside class="sidebar">
       <div class="brand"><span class="logo">T</span><span>TaskBoard</span></div>
-      <div class="side-section grow"></div>
+
+      <div class="side-section grow">
+        <p class="side-label">Current project</p>
+        <div class="project-card">
+          <strong id="projectKey">--</strong>
+          <span id="projectName">No project</span>
+        </div>
+        <button id="newProjectBtn" class="ghost">+ New project</button>
+      </div>
+
       <div class="side-user">
         <span id="whoAvatar" class="avatar"></span>
         <span id="who"></span>
@@ -55,9 +64,10 @@
     <main class="main">
       <div class="topbar">
         <h1>Board</h1>
+        <select id="projectSelect" aria-label="Select project"></select>
       </div>
       <p id="appError" class="error" role="alert"></p>
-      <p class="placeholder">You are logged in. Projects and the board are added in the next tickets.</p>
+      <p class="placeholder">Pick a project from the dropdown. The board is added in the next ticket.</p>
     </main>
   </section>
 

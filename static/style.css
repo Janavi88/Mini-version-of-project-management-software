@@ -205,3 +205,25 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   .sidebar { position: static; height: auto; gap: 18px; }
   .main { padding: 16px; }
 }
+
+/* ================= PROJECTS (TB-16) ================= */
+.side-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--slate-gray);
+  font-weight: 700;
+}
+
+.project-card {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.project-card strong { color: var(--white); font-size: 16px; }
+.project-card span { color: var(--tan); font-size: 12px; overflow-wrap: anywhere; }
+
+#projectSelect { min-width: 220px; font-weight: 600; }
