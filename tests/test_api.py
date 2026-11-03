@@ -36,7 +36,8 @@ def test_register_and_me(client):
 
 def test_duplicate_email_rejected(client):
     reg(client)
-    assert reg(client, email="A@TEST.com").status_code == 400
+    # TB-44: duplicate email is a conflict (SAD 4.3.3), so 409
+    assert reg(client, email="A@TEST.com").status_code == 409
 
 
 def test_short_password_rejected(client):
@@ -55,7 +56,8 @@ def test_project_key_validation(client):
 def test_duplicate_project_key(client):
     reg(client)
     make_project(client)
-    assert make_project(client, key="tb").status_code == 400
+    # TB-44: duplicate key is a conflict (SAD 4.3.3), so 409
+    assert make_project(client, key="tb").status_code == 409
 
 
 # ---- TB-17 Create issue (TC-09, TC-10, TC-11) ----

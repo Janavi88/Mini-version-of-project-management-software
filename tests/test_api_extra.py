@@ -4,13 +4,12 @@ Written against develop as of commit 8446da1 (01-11-2026). Covers what
 tests/test_api.py does not: security checks (Test Plan 5.1), validation of
 every field, assignment, comments, persistence, and malformed input.
 
-Two kinds of marked tests:
-- xfail(strict=True): an open bug (BUG-xx in the Sprint 1 test report).
-  CI stays green while the bug is open. When the bug is fixed the test passes
-  and CI turns red with "XPASS(strict)": delete the marker then.
+Marked tests:
 - xfail(strict=False), reason "BLOCKED": an endpoint from SAD 4.3 that the
   web page calls but develop does not have yet. Shows as XPASS once it lands;
   delete the marker then.
+
+Fixed bugs (BUG-01, BUG-05 to BUG-09) no longer carry an xfail marker.
 """
 import pytest
 
@@ -259,7 +258,7 @@ def test_data_persists_across_restart(tmp_path):                # TC-Rel-01
         assert Issue.query.one().title == 'Survives restart'
 
 
-# ---------- Open bugs (strict xfail: fix the bug, then delete the marker) ----------
+# ---------- Fixed bugs (markers removed) ----------
 
 JSON_BODY_ENDPOINTS = [
     ('post', '/api/register'), ('post', '/api/projects'),
@@ -268,52 +267,50 @@ JSON_BODY_ENDPOINTS = [
 ]
 
 
-@pytest.mark.xfail(strict=True, reason='BUG-05: non-object JSON body crashes the route (500)')
 @pytest.mark.parametrize('method,url', JSON_BODY_ENDPOINTS)
-def test_non_object_json_body_returns_400(safe_client, method, url):
+def test_non_object_json_body_returns_400(safe_client, method, url):   # BUG-05 / TB-40
     setup_issue(safe_client)
     assert getattr(safe_client, method)(url, json=[1]).status_code == 400
 
 
-@pytest.mark.xfail(strict=True, reason='BUG-06: list in type, priority or points crashes (500)')
 @pytest.mark.parametrize('field,value', [('type', ['Bug']), ('priority', ['High']),
                                          ('story_points', [3])])
-def test_list_values_in_issue_fields_return_400(safe_client, field, value):
+def test_list_values_in_issue_fields_return_400(safe_client, field, value):  # BUG-06 / TB-41
     register(safe_client)
     make_project(safe_client)
     assert make_issue(safe_client, **{field: value}).status_code == 400
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-07: email '@' accepted at registration")
-def test_malformed_email_rejected(client):
+def test_malformed_email_rejected(client):                      # BUG-07 / TB-42
     assert register(client, email='@').status_code == 400
 
 
-@pytest.mark.xfail(strict=True, reason='BUG-08: no length limit on issue title (200)')
-def test_overlong_title_rejected(client):
+def test_overlong_title_rejected(client):                       # BUG-08 / TB-43
     register(client)
     make_project(client)
     assert make_issue(client, title='x' * 5000).status_code == 400
 
 
-@pytest.mark.xfail(strict=True, reason='BUG-08: no length limit on comment body (2000)')
-def test_overlong_comment_rejected(client):
+def test_overlong_comment_rejected(client):                     # BUG-08 / TB-43
     issue = setup_issue(client)
     r = client.post('/api/issues/%d/comments' % issue['id'], json={'body': 'y' * 5000})
     assert r.status_code == 400
 
 
-@pytest.mark.xfail(strict=True, reason='BUG-09: duplicate email gives 400, SAD 4.3.2 says 409')
-def test_duplicate_email_returns_409(client):
+def test_duplicate_email_returns_409(client):                   # BUG-09 / TB-44
     register(client)
     assert register(client).status_code == 409
 
 
-@pytest.mark.xfail(strict=True, reason='BUG-09: duplicate key gives 400, SAD 4.3.3 says 409')
-def test_duplicate_project_key_returns_409(client):
+def test_duplicate_project_key_returns_409(client):             # BUG-09 / TB-44
     register(client)
     make_project(client)
     assert make_project(client, 'tb').status_code == 409
+
+
+def test_web_page_is_served(client):                            # BUG-01 / TB-36
+    r = client.get('/')
+    assert r.status_code == 200 and b'<html' in r.data.lower()
 
 
 # ---------- Blocked: SAD endpoints the web page calls, not on develop yet ----------
@@ -321,12 +318,6 @@ def test_duplicate_project_key_returns_409(client):
 def blocked(endpoint):
     return pytest.mark.xfail(strict=False,
                              reason='BLOCKED (BUG-02): %s not on develop yet' % endpoint)
-
-
-@blocked('GET / (the web page)')
-def test_web_page_is_served(client):                            # BUG-01
-    r = client.get('/')
-    assert r.status_code == 200 and b'<html' in r.data.lower()
 
 
 @blocked('POST /api/login')
