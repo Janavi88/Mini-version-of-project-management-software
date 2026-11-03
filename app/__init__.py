@@ -8,7 +8,8 @@ db = SQLAlchemy()
 
 
 def create_app(test_config=None):
-    app = Flask(__name__)
+    # static/ lives at the repo root, not inside app/ (TB-36)
+    app = Flask(__name__, static_folder="../static", static_url_path="/static")
 
     # TB-SR-008: secret key comes from an environment variable.
     # "dev" is only a fallback for local development.
@@ -21,8 +22,9 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
-    from .routes import bp
+    from .routes import bp, web
     app.register_blueprint(bp)
+    app.register_blueprint(web)
 
     with app.app_context():
         from . import models  # noqa: F401  (registers the tables)
