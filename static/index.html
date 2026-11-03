@@ -68,6 +68,26 @@
         <select id="projectSelect" aria-label="Select project"></select>
       </div>
       <p id="appError" class="error" role="alert"></p>
+
+      <!-- Create issue panel (TB-39) -->
+      <div class="create-panel">
+        <input id="newTitle" placeholder="What needs to be done?" aria-label="Issue title">
+        <select id="newType" aria-label="Type">
+          <option>Story</option><option selected>Task</option><option>Bug</option><option>Epic</option>
+        </select>
+        <select id="newPriority" aria-label="Priority">
+          <option>High</option><option selected>Medium</option><option>Low</option>
+        </select>
+        <select id="newPoints" aria-label="Story points">
+          <option value="">No points</option>
+          <option>1</option><option>2</option><option>3</option>
+          <option>5</option><option>8</option><option>13</option>
+        </select>
+        <select id="newAssignee" aria-label="Assignee"></select>
+        <button id="addIssueBtn">Add issue</button>
+      </div>
+      <p id="createError" class="error" role="alert"></p>
+
       <div id="board"></div>
     </main>
   </section>

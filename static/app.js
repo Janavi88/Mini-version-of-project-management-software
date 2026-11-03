@@ -97,6 +97,7 @@ async function start() {
   $('who').textContent = displayName;
   $('whoAvatar').textContent = initials(displayName);
   showError('appError', null);
+  await loadAssignees();
   await loadProjects();
 }
 
@@ -332,6 +333,56 @@ async function deleteIssue(issue) {
   }
 }
 
+/* ---------- create issue (TB-39) ---------- */
+
+async function loadAssignees() {
+  try {
+    const users = await api('/users');
+    fillSelect($('newAssignee'), [['', 'Unassigned'], ...users.map((u) => [u.id, u.name])]);
+  } catch (err) {
+    fillSelect($('newAssignee'), [['', 'Unassigned']]);
+  }
+}
+
+async function createIssue() {
+  showError('createError', null);
+
+  if (!state.projectId) {
+    showError('createError', new Error('Create or select a project first.'));
+    return;
+  }
+
+  const title = $('newTitle').value.trim();
+  if (!title) {
+    showError('createError', new Error('Enter an issue title.'));
+    return;
+  }
+
+  const points = $('newPoints').value;
+  const assignee = $('newAssignee').value;
+  const payload = {
+    title,
+    type: $('newType').value,
+    priority: $('newPriority').value,
+    story_points: points ? Number(points) : null,
+    assignee_id: assignee ? Number(assignee) : null,
+  };
+
+  $('addIssueBtn').disabled = true;
+  try {
+    await api(`/projects/${state.projectId}/issues`, 'POST', payload);
+    $('newTitle').value = '';
+    $('newPoints').value = '';
+    $('newAssignee').value = '';
+    await loadBoard();
+    $('newTitle').focus();
+  } catch (err) {
+    showError('createError', err);
+  } finally {
+    $('addIssueBtn').disabled = false;
+  }
+}
+
 /* ---------- events ---------- */
 
 $('loginBtn').onclick = () => authenticate('/login');
@@ -349,6 +400,7 @@ $('logoutBtn').onclick = async () => {
     $('password').value = '';
     showError('authError', null);
     showError('appError', null);
+    showError('createError', null);
     showApp(false);
   } catch (err) {
     showError('appError', err);
@@ -362,6 +414,11 @@ $('projectSelect').onchange = (event) => {
   loadBoard();
 };
 $('newProjectBtn').onclick = newProject;
+
+$('addIssueBtn').onclick = createIssue;
+$('newTitle').addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') createIssue();
+});
 
 $('editSaveBtn').onclick = saveEdit;
 $('editCancelBtn').onclick = () => $('editDialog').close();

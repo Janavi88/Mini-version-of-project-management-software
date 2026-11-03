@@ -345,3 +345,21 @@ button.danger:hover { background: var(--caput-mortuum); color: var(--white); }
 .dialog-grid > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .dialog-grid select { width: 100%; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+/* ================= CREATE ISSUE (TB-39) ================= */
+.create-panel {
+  display: grid;
+  grid-template-columns: 2fr repeat(4, minmax(0, 1fr)) auto;
+  gap: 8px;
+  background: var(--white);
+  padding: 12px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 8px;
+}
+.create-panel input, .create-panel select { min-width: 0; width: 100%; }
+
+@media (max-width: 1200px) {
+  .create-panel { grid-template-columns: 1fr 1fr; }
+  .create-panel #newTitle, .create-panel button { grid-column: 1 / -1; }
+}
