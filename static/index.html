@@ -6,7 +6,8 @@
   <title>TaskBoard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="/style.css">
+  <!-- TB-36: was /style.css -->
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <!-- ================= LOGIN / REGISTER ================= -->
@@ -40,7 +41,7 @@
     </div>
   </section>
 
-    <!-- ================= APP (after login) ================= -->
+  <!-- ================= APP (after login) ================= -->
   <section id="app" hidden>
     <aside class="sidebar">
       <div class="brand"><span class="logo">T</span><span>TaskBoard</span></div>
@@ -70,6 +71,7 @@
       <div id="board"></div>
     </main>
   </section>
+
   <!-- Edit issue dialog (TB-18) -->
   <dialog id="editDialog" class="dialog">
     <div class="dialog-body">
@@ -112,6 +114,8 @@
       </div>
     </div>
   </dialog>
-  <script src="/app.js"></script>
+
+  <!-- TB-36: was /app.js -->
+  <script src="/static/app.js"></script>
 </body>
 </html>
