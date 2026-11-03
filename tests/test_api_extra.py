@@ -1,15 +1,12 @@
 """Extra Sprint 1 API tests (TB-28, Member 3): auth, projects, issues, comments.
 
-Written against develop as of commit 8446da1 (01-11-2026). Covers what
-tests/test_api.py does not: security checks (Test Plan 5.1), validation of
-every field, assignment, comments, persistence, and malformed input.
+Covers what tests/test_api.py does not: security checks (Test Plan 5.1),
+validation of every field, assignment, comments, persistence, malformed input,
+and the endpoints the web page calls (login, logout, users, list projects,
+list issues, edit issue, delete issue).
 
-Marked tests:
-- xfail(strict=False), reason "BLOCKED": an endpoint from SAD 4.3 that the
-  web page calls but develop does not have yet. Shows as XPASS once it lands;
-  delete the marker then.
-
-Fixed bugs (BUG-01, BUG-05 to BUG-09) no longer carry an xfail marker.
+All known bugs (BUG-01, BUG-02, BUG-05 to BUG-09) are fixed, so no test
+carries an xfail marker any more.
 """
 import pytest
 
@@ -63,8 +60,13 @@ def setup_issue(c):
 
 PROTECTED = [
     ('get', '/api/me'),
+    ('get', '/api/users'),
+    ('get', '/api/projects'),
     ('post', '/api/projects'),
+    ('get', '/api/projects/1/issues'),
     ('post', '/api/projects/1/issues'),
+    ('patch', '/api/issues/1'),
+    ('delete', '/api/issues/1'),
     ('patch', '/api/issues/1/assignee'),
     ('post', '/api/issues/1/comments'),
 ]
@@ -258,7 +260,7 @@ def test_data_persists_across_restart(tmp_path):                # TC-Rel-01
         assert Issue.query.one().title == 'Survives restart'
 
 
-# ---------- Fixed bugs (markers removed) ----------
+# ---------- Fixed bugs ----------
 
 JSON_BODY_ENDPOINTS = [
     ('post', '/api/register'), ('post', '/api/projects'),
@@ -313,14 +315,8 @@ def test_web_page_is_served(client):                            # BUG-01 / TB-36
     assert r.status_code == 200 and b'<html' in r.data.lower()
 
 
-# ---------- Blocked: SAD endpoints the web page calls, not on develop yet ----------
+# ---------- Endpoints the web page calls (TB-37) ----------
 
-def blocked(endpoint):
-    return pytest.mark.xfail(strict=False,
-                             reason='BLOCKED (BUG-02): %s not on develop yet' % endpoint)
-
-
-@blocked('POST /api/login')
 def test_login_success_and_generic_error(client):               # TC-04, TC-05, TB-SR-007
     register(client)
     client.post('/api/logout')
@@ -332,14 +328,12 @@ def test_login_success_and_generic_error(client):               # TC-04, TC-05, 
     assert unknown.get_json() == wrong.get_json()
 
 
-@blocked('POST /api/logout')
 def test_logout_then_protected_call_returns_401(client):        # TC-06, TB-F-004
     register(client)
     assert client.post('/api/logout').status_code == 200
     assert client.get('/api/me').status_code == 401
 
 
-@blocked('GET /api/users')
 def test_users_list(client):
     register(client)
     r = client.get('/api/users')
@@ -347,7 +341,6 @@ def test_users_list(client):
     assert [u['name'] for u in r.get_json()] == ['Asha']
 
 
-@blocked('GET /api/projects')
 def test_list_projects(client):                                 # TC-07, TB-F-006
     register(client)
     make_project(client)
@@ -356,7 +349,6 @@ def test_list_projects(client):                                 # TC-07, TB-F-00
     assert [p['key'] for p in r.get_json()] == ['TB']
 
 
-@blocked('GET /api/projects/{id}/issues')
 def test_list_issues(client):                                   # TC-09, TB-F-013
     setup_issue(client)
     r = client.get('/api/projects/1/issues')
@@ -364,7 +356,11 @@ def test_list_issues(client):                                   # TC-09, TB-F-01
     assert [i['key'] for i in r.get_json()] == ['TB-1']
 
 
-@blocked('PATCH /api/issues/{id}')
+def test_list_issues_of_missing_project_returns_404(client):
+    register(client)
+    assert client.get('/api/projects/99/issues').status_code == 404
+
+
 def test_change_status_and_edit(client):                        # TC-12, TC-24, TB-F-010
     issue = setup_issue(client)
     r = client.patch('/api/issues/%d' % issue['id'],
@@ -373,16 +369,46 @@ def test_change_status_and_edit(client):                        # TC-12, TC-24, 
     assert (r.get_json()['status'], r.get_json()['title']) == ('In Progress', 'New')
 
 
-@blocked('PATCH /api/issues/{id} rejecting bad status')
 def test_invalid_status_rejected(client):
     issue = setup_issue(client)
     r = client.patch('/api/issues/%d' % issue['id'], json={'status': 'Flying'})
     assert r.status_code == 400
 
 
-@blocked('DELETE /api/issues/{id}')
+def test_invalid_edit_changes_nothing(client):
+    issue = setup_issue(client)
+    url = '/api/issues/%d' % issue['id']
+    r = client.patch(url, json={'title': 'Changed', 'priority': 'Urgent'})
+    assert r.status_code == 400
+    # The valid title must not be applied when another field is invalid.
+    issues = client.get('/api/projects/1/issues').get_json()
+    assert issues[0]['title'] == 'Issue'
+
+
+def test_edit_can_assign_and_unassign(client):                  # TB-38
+    issue = setup_issue(client)
+    me = client.get('/api/me').get_json()
+    url = '/api/issues/%d' % issue['id']
+    assert client.patch(url, json={'assignee_id': me['id']}).get_json()['assignee'] == 'Asha'
+    assert client.patch(url, json={'assignee_id': None}).get_json()['assignee'] is None
+    assert client.patch(url, json={'assignee_id': 999}).status_code == 400
+
+
+def test_edit_missing_issue_returns_404(client):
+    register(client)
+    assert client.patch('/api/issues/99', json={'title': 'x'}).status_code == 404
+
+
 def test_delete_issue(client):                                  # TC-13, TB-F-011
     issue = setup_issue(client)
     assert client.delete('/api/issues/%d' % issue['id']).status_code == 200
     assert client.patch('/api/issues/%d/assignee' % issue['id'],
                         json={'assignee_id': None}).status_code == 404
+
+
+def test_delete_issue_removes_its_comments(app, client):
+    issue = setup_issue(client)
+    client.post('/api/issues/%d/comments' % issue['id'], json={'body': 'hi'})
+    assert client.delete('/api/issues/%d' % issue['id']).status_code == 200
+    with app.app_context():
+        assert Comment.query.count() == 0
