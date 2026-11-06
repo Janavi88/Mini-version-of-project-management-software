@@ -1,6 +1,6 @@
 const $ = (id) => document.getElementById(id);
 const STATUSES = ['To Do', 'In Progress', 'In Review', 'Done'];
-const state = { user: null, projects: [], projectId: null };
+const state = { user: null, projects: [], sprints: [], projectId: null };
 
 async function api(path, method = 'GET', payload) {
   const res = await fetch('/api' + path, {
@@ -115,7 +115,9 @@ async function loadProjects() {
 
     if (!state.projects.length) {
       state.projectId = null;
+      await loadSprints(false);
       $('board').replaceChildren();
+      renderSprintSummary([]);
       fillSelect($('projectSelect'), [['', 'No projects yet']]);
       renderSidebar();
       showError('appError', null);
@@ -133,6 +135,7 @@ async function loadProjects() {
       state.projectId
     );
     renderSidebar();
+    await loadSprints();
     await loadBoard();
   } catch (err) {
     showError('appError', err);
@@ -223,18 +226,72 @@ async function changeStatus(issue, select) {
   }
 }
 
+async function loadSprints(keepSelection = true) {
+  const select = $('sprintFilter');
+  const base = [['all', 'All issues'], ['none', 'Backlog']];
+  const current = keepSelection ? (select.value || 'all') : 'all';
+
+  if (!state.projectId) {
+    state.sprints = [];
+    fillSelect(select, base, 'all');
+    return;
+  }
+
+  const requestedId = state.projectId;
+  let sprints = [];
+  try {
+    sprints = await api(`/projects/${requestedId}/sprints`);
+  } catch (err) {
+    // All issues and Backlog still work without the sprint list.
+    console.warn('Could not load sprints:', err.message);
+  }
+  // Ignore a slow response if the user already switched to another project.
+  if (requestedId !== state.projectId) return;
+
+  state.sprints = sprints;
+  const label = (sprint) =>
+    sprint.name + (sprint.active ? ' (active)' : sprint.completed ? ' (completed)' : '');
+  const stillValid = current === 'all' || current === 'none' ||
+    sprints.some((sprint) => String(sprint.id) === current);
+
+  fillSelect(
+    select,
+    [...base, ...sprints.map((sprint) => [sprint.id, label(sprint)])],
+    stillValid ? current : 'all'
+  );
+}
+
+/* ---------- sprint summary (TB-25) ---------- */
+
+function renderSprintSummary(issues) {
+  const points = (issue) => Number(issue.story_points) || 0;
+  const total = issues.reduce((sum, issue) => sum + points(issue), 0);
+  const done = issues
+    .filter((issue) => issue.status === 'Done')
+    .reduce((sum, issue) => sum + points(issue), 0);
+  $('sprintSummary').textContent = `${done} / ${total} points done`;
+}
+
 async function loadBoard() {
   const board = $('board');
   if (!state.projectId) {
     board.replaceChildren();
+    renderSprintSummary([]);
     return;
   }
 
   const requestedId = state.projectId;
   try {
-    const issues = await api(`/projects/${requestedId}/issues`);
+    const filter = $('sprintFilter').value;
+    let query = '';
+    if (filter === 'none') query = '?sprint_id=none';
+    else if (filter && filter !== 'all') query = '?sprint_id=' + encodeURIComponent(filter);
+
+    const issues = await api(`/projects/${requestedId}/issues${query}`);
     // Ignore a slow response if the user already switched to another project.
     if (requestedId !== state.projectId) return;
+
+    renderSprintSummary(issues);
 
     board.replaceChildren();
     STATUSES.forEach((status) => {
@@ -396,6 +453,7 @@ $('logoutBtn').onclick = async () => {
     await api('/logout', 'POST');
     state.user = null;
     state.projects = [];
+    state.sprints = [];
     state.projectId = null;
     $('password').value = '';
     showError('authError', null);
@@ -407,12 +465,14 @@ $('logoutBtn').onclick = async () => {
   }
 };
 
-$('projectSelect').onchange = (event) => {
+$('projectSelect').onchange = async (event) => {
   const selectedId = event.target.value;
   state.projectId = selectedId ? Number(selectedId) : null;
   renderSidebar();
-  loadBoard();
+  await loadSprints(false); // a different project has different sprints, so reset to All issues
+  await loadBoard();
 };
+$('sprintFilter').onchange = loadBoard;
 $('newProjectBtn').onclick = newProject;
 
 $('addIssueBtn').onclick = createIssue;

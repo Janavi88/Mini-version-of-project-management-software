@@ -363,3 +363,29 @@ button.danger:hover { background: var(--caput-mortuum); color: var(--white); }
   .create-panel { grid-template-columns: 1fr 1fr; }
   .create-panel #newTitle, .create-panel button { grid-column: 1 / -1; }
 }
+
+/* ================= SPRINT FILTER (TB-26) ================= */
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+.toolbar label { font-size: 12px; font-weight: 600; color: var(--slate-gray); }
+#sprintFilter { min-width: 200px; font-weight: 600; }
+
+/* ================= SPRINT SUMMARY (TB-25) ================= */
+.sprint-summary {
+  margin-left: auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--tan-soft);
+  color: var(--coffee);
+  font-size: 12px;
+  font-weight: 700;
+}
