@@ -117,6 +117,7 @@ async function loadProjects() {
       state.projectId = null;
       await loadSprints(false);
       $('board').replaceChildren();
+      renderSprintSummary([]);
       fillSelect($('projectSelect'), [['', 'No projects yet']]);
       renderSidebar();
       showError('appError', null);
@@ -260,10 +261,22 @@ async function loadSprints(keepSelection = true) {
   );
 }
 
+/* ---------- sprint summary (TB-25) ---------- */
+
+function renderSprintSummary(issues) {
+  const points = (issue) => Number(issue.story_points) || 0;
+  const total = issues.reduce((sum, issue) => sum + points(issue), 0);
+  const done = issues
+    .filter((issue) => issue.status === 'Done')
+    .reduce((sum, issue) => sum + points(issue), 0);
+  $('sprintSummary').textContent = `${done} / ${total} points done`;
+}
+
 async function loadBoard() {
   const board = $('board');
   if (!state.projectId) {
     board.replaceChildren();
+    renderSprintSummary([]);
     return;
   }
 
@@ -277,6 +290,8 @@ async function loadBoard() {
     const issues = await api(`/projects/${requestedId}/issues${query}`);
     // Ignore a slow response if the user already switched to another project.
     if (requestedId !== state.projectId) return;
+
+    renderSprintSummary(issues);
 
     board.replaceChildren();
     STATUSES.forEach((status) => {
