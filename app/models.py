@@ -23,6 +23,30 @@ class Project(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
 
+class Sprint(db.Model):
+    """TB-23 / TB-24. status: Planned -> Active -> Completed."""
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(20), default="Planned", nullable=False)
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+
+    issues = db.relationship("Issue", back_populates="sprint")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "project_id": self.project_id,
+            "name": self.name,
+            "status": self.status,
+            "start_date": self.start_date.isoformat() if self.start_date else None,
+            "end_date": self.end_date.isoformat() if self.end_date else None,
+            "issue_count": len(self.issues),
+            "story_points": sum(i.story_points or 0 for i in self.issues),
+        }
+
+
 class Issue(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
@@ -33,9 +57,11 @@ class Issue(db.Model):
     status = db.Column(db.String(20), default="To Do", nullable=False)
     story_points = db.Column(db.Integer)
     assignee_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    sprint_id = db.Column(db.Integer, db.ForeignKey("sprint.id"))  # None = backlog
 
     project = db.relationship("Project")
     assignee = db.relationship("User")
+    sprint = db.relationship("Sprint", back_populates="issues")
 
     def to_dict(self):
         return {
@@ -48,6 +74,7 @@ class Issue(db.Model):
             "story_points": self.story_points,
             "assignee_id": self.assignee_id,
             "assignee": self.assignee.name if self.assignee else None,
+            "sprint_id": self.sprint_id,
         }
 
 
