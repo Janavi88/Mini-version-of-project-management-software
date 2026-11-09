@@ -1,4 +1,6 @@
-"""Extra Sprint 2 API tests (TB-31, Member 3): sprints, summary and board filter.
+"""Extra Sprint 2 API tests (TB-31, Member 3).
+
+Sprints, the sprint summary and the board filter.
 
 Checks the sprint API against the SRS (TB-F-016 to TB-F-020) and the test plan
 (FR-10 to FR-13, TC-15 to TC-19). Covers what tests/test_sprints.py does not:
@@ -26,7 +28,7 @@ def client():
 
 @pytest.fixture
 def safe_client():
-    """Unhandled errors become HTTP 500 instead of exceptions, as a user sees them."""
+    """Unhandled errors become HTTP 500, as a user would see them."""
     app = create_app({'TESTING': False, 'PROPAGATE_EXCEPTIONS': False,
                       'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:'})
     with app.test_client() as c:
@@ -41,7 +43,8 @@ def setup(c):
 
 def make_issue(c, pid=1, **fields):
     fields.setdefault('title', 'Issue')
-    return c.post('/api/projects/%d/issues' % pid, json=fields).get_json()['id']
+    r = c.post('/api/projects/%d/issues' % pid, json=fields)
+    return r.get_json()['id']
 
 
 def make_sprint(c, pid=1, **fields):
@@ -66,7 +69,7 @@ def issues(c, query=''):
 
 
 def sprint_with_3_done_and_5_open(c):
-    """The SRS AC-F-019 example: a 3-point Done issue and a 5-point open issue."""
+    """SRS AC-F-019 example: a 3-point Done issue and a 5-point open issue."""
     sid = new_sprint(c)
     done = make_issue(c, title='Done one', story_points=3)
     open_ = make_issue(c, title='Open one', story_points=5)
@@ -79,7 +82,8 @@ def sprint_with_3_done_and_5_open(c):
 
 BUG_12 = pytest.mark.xfail(
     strict=True,
-    reason='BUG-12: GET /projects/{id}/issues ignores ?sprint_id, so the board '
+    reason='BUG-12: GET /projects/{id}/issues ignores ?sprint_id, so the '
+           'board '
            'filter and the sprint summary always use every issue')
 
 
@@ -91,7 +95,8 @@ def test_sprint_with_same_start_and_end_date_is_allowed(client):
     assert r.status_code == 201
 
 
-def test_reversed_dates_give_error_message(client):          # AC-F-016
+# AC-F-016
+def test_reversed_dates_give_error_message(client):
     setup(client)
     r = make_sprint(client, start_date='2026-11-16', end_date='2026-11-10')
     assert r.status_code == 400
@@ -117,7 +122,8 @@ def test_only_yyyy_mm_dd_dates_accepted(client, value):
 
 def test_sprint_name_is_trimmed(client):
     setup(client)
-    assert make_sprint(client, name='  Sprint 2  ').get_json()['name'] == 'Sprint 2'
+    r = make_sprint(client, name='  Sprint 2  ')
+    assert r.get_json()['name'] == 'Sprint 2'
 
 
 def test_sprint_name_of_100_characters_is_allowed(client):
@@ -135,8 +141,8 @@ def test_sprints_are_listed_per_project(client):
     client.post('/api/projects', json={'key': 'AB', 'name': 'Other'})
     new_sprint(client, pid=1, name='TB sprint')
     new_sprint(client, pid=2, name='AB sprint')
-    assert [s['name'] for s in client.get('/api/projects/2/sprints').get_json()] \
-        == ['AB sprint']
+    sprints = client.get('/api/projects/2/sprints').get_json()
+    assert [s['name'] for s in sprints] == ['AB sprint']
 
 
 # ---------- FR-10: put issues into a sprint ----------
@@ -175,7 +181,8 @@ def test_cannot_remove_issue_from_completed_sprint(client):
     set_status(client, iid, 'Done')
     client.post('/api/sprints/%d/start' % sid)
     client.post('/api/sprints/%d/complete' % sid)
-    assert client.delete('/api/sprints/%d/issues/%d' % (sid, iid)).status_code == 409
+    r = client.delete('/api/sprints/%d/issues/%d' % (sid, iid))
+    assert r.status_code == 409
 
 
 def test_remove_issue_that_is_in_another_sprint_returns_404(client):
@@ -184,7 +191,8 @@ def test_remove_issue_that_is_in_another_sprint_returns_404(client):
     two = new_sprint(client, name='Two')
     iid = make_issue(client)
     add(client, one, iid)
-    assert client.delete('/api/sprints/%d/issues/%d' % (two, iid)).status_code == 404
+    r = client.delete('/api/sprints/%d/issues/%d' % (two, iid))
+    assert r.status_code == 404
     assert issues(client)[0]['sprint_id'] == one
 
 
@@ -206,17 +214,21 @@ def test_add_issue_with_bad_issue_id_returns_400(safe_client, issue_id):
     assert add(safe_client, sid, issue_id).status_code == 400
 
 
-@pytest.mark.parametrize('url', ['/api/projects/1/sprints', '/api/sprints/1/issues'])
-def test_broken_json_returns_400_not_500(safe_client, url):    # TB-NF-005
+@pytest.mark.parametrize('url', ['/api/projects/1/sprints',
+                                 '/api/sprints/1/issues'])
+# TB-NF-005
+def test_broken_json_returns_400_not_500(safe_client, url):
     setup(safe_client)
     new_sprint(safe_client)
-    r = safe_client.post(url, data='{not json', content_type='application/json')
+    r = safe_client.post(url, data='{not json',
+                         content_type='application/json')
     assert r.status_code == 400
 
 
 # ---------- TB-F-017 / FR-11: start a sprint (TC-16) ----------
 
-def test_second_start_gives_conflict_and_changes_nothing(client):   # AC-F-017
+# AC-F-017
+def test_second_start_gives_conflict_and_changes_nothing(client):
     setup(client)
     one = new_sprint(client, name='Sprint 1')
     two = new_sprint(client, name='Sprint 2')
@@ -225,7 +237,8 @@ def test_second_start_gives_conflict_and_changes_nothing(client):   # AC-F-017
     assert r.status_code == 409
     assert 'active' in r.get_json()['error']
     assert client.get('/api/sprints/%d' % one).get_json()['status'] == 'Active'
-    assert client.get('/api/sprints/%d' % two).get_json()['status'] == 'Planned'
+    r = client.get('/api/sprints/%d' % two)
+    assert r.get_json()['status'] == 'Planned'
 
 
 def test_start_keeps_planned_start_date(client):
@@ -257,7 +270,8 @@ def test_remove_from_missing_sprint_returns_404(client):
 
 # ---------- TB-F-018 / FR-11: complete a sprint (TC-17) ----------
 
-def test_complete_returns_every_unfinished_status_to_backlog(client):  # AC-F-018
+# AC-F-018
+def test_complete_returns_every_unfinished_status_to_backlog(client):
     setup(client)
     sid = new_sprint(client)
     ids = {}
@@ -310,7 +324,8 @@ def test_sprint_total_points(client):
 
 
 @BUG_12
-def test_sprint_summary_points(client):                    # AC-F-019: 3 of 8
+# AC-F-019: 3 of 8
+def test_sprint_summary_points(client):
     setup(client)
     sid, *_ = sprint_with_3_done_and_5_open(client)
     shown = issues(client, '?sprint_id=%d' % sid)    # what the board loads
@@ -319,7 +334,7 @@ def test_sprint_summary_points(client):                    # AC-F-019: 3 of 8
     assert (done, total) == (3, 8)
 
 
-# ---------- TB-F-020 / FR-13: filter by sprint or backlog (TC-15, TC-19) ----------
+# ---------- TB-F-020 / FR-13: filter by sprint or backlog (TC-15, TC-19) ---
 
 def test_unfiltered_list_still_returns_every_issue(client):
     setup(client)
@@ -328,14 +343,17 @@ def test_unfiltered_list_still_returns_every_issue(client):
 
 
 @BUG_12
-def test_filter_by_sprint_shows_only_its_issues(client):    # AC-F-020
+# AC-F-020
+def test_filter_by_sprint_shows_only_its_issues(client):
     setup(client)
     sid, done, open_, backlog = sprint_with_3_done_and_5_open(client)
-    assert {i['id'] for i in issues(client, '?sprint_id=%d' % sid)} == {done, open_}
+    shown = issues(client, '?sprint_id=%d' % sid)
+    assert {i['id'] for i in shown} == {done, open_}
 
 
 @BUG_12
-def test_filter_backlog_shows_only_issues_without_sprint(client):   # AC-F-020
+# AC-F-020
+def test_filter_backlog_shows_only_issues_without_sprint(client):
     setup(client)
     sid, done, open_, backlog = sprint_with_3_done_and_5_open(client)
     assert [i['id'] for i in issues(client, '?sprint_id=none')] == [backlog]
@@ -353,4 +371,5 @@ def test_filter_by_sprint_with_no_issues_is_empty(client):
 def test_filter_with_bad_sprint_id_returns_400(client):
     setup(client)
     sprint_with_3_done_and_5_open(client)
-    assert client.get('/api/projects/1/issues?sprint_id=abc').status_code == 400
+    r = client.get('/api/projects/1/issues?sprint_id=abc')
+    assert r.status_code == 400
