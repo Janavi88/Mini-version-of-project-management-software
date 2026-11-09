@@ -23,8 +23,10 @@ def create_app(test_config=None):
     db.init_app(app)
 
     from .routes import bp, web
+    from .sprints import sprints_bp  # TB-23/24
     app.register_blueprint(bp)
     app.register_blueprint(web)
+    app.register_blueprint(sprints_bp)  # TB-23/24
 
     with app.app_context():
         from . import models  # noqa: F401  (registers the tables)
