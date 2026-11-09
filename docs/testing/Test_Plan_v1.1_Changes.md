@@ -55,13 +55,13 @@ The SRS (column "Acceptance criteria / Test case ref") uses different IDs. Mappi
 | TC-Auth-06 | TB-F-004 | TC-06 |
 | TC-Prj-01..03 | TB-F-005 | TC-07, TC-08, test_project_key_validation |
 | TC-Prj-04 | TB-F-006 | TC-07 |
-| TC-Prj-05, TC-Prj-06 | TB-F-007, TB-SR-005 | **No case in v1.0.** New: TC-28 (below); test_owner_can_delete_project, test_non_owner_delete_gets_403 (xfail, BUG-16) |
+| TC-Prj-05, TC-Prj-06 | TB-F-007, TB-SR-005 | **No case in v1.0.** New: TC-28 (below); test_owner_can_delete_project, test_non_owner_delete_gets_403 (xfail, BUG-16 [TB-52]) |
 | TC-Iss-01, TC-Iss-02 | TB-F-008 | TC-09, TC-11 |
 | TC-Iss-03, TC-Iss-04 | TB-F-009 | TC-10, test_invalid_issue_fields_rejected_and_nothing_created |
 | TC-Iss-05, TC-Iss-06 | TB-F-010 | TC-12, TC-24 |
 | TC-Iss-07 | TB-F-011 | TC-13 |
 | TC-Iss-08 | TB-F-012 | TC-14 |
-| TC-Iss-09 | TB-F-013 | **No case in v1.0.** New: test_filter_issues_by_* (xfail, BUG-17) |
+| TC-Iss-09 | TB-F-013 | **No case in v1.0.** New: test_filter_issues_by_* (xfail, BUG-17 [TB-53]) |
 | TC-Iss-10 | TB-F-014 | TC-23 |
 | TC-Cmt-01, TC-Cmt-02 | TB-F-015 | TC-21, TC-22 |
 | TC-Spr-01, TC-Spr-02 | TB-F-016 | TC-15, test_reversed_dates_give_error_message |
