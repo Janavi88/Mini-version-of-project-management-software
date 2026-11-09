@@ -67,7 +67,7 @@ When a bug is fixed, its tests start passing and strict mode fails the run until
 
 ## 4. Sprint 2 bugs
 
-### BUG-12: Board filter and sprint summary ignore the selected sprint
+### BUG-12 (Jira TB-47): Board filter and sprint summary ignore the selected sprint
 Severity: Major. Area: backend, issue list (FR-12, FR-13).
 
 Steps to reproduce:
@@ -81,7 +81,7 @@ Cause: the page calls `GET /api/projects/{id}/issues?sprint_id=1` (or `?sprint_i
 Suggested fix: in `list_issues`, read `request.args.get("sprint_id")`: `none` filters `sprint_id IS NULL`, a number filters that sprint, anything else returns 400.
 Environment: integration of develop @ fd11327 + the three Sprint 2 branches, Chromium, Windows 11.
 
-### BUG-13: No UI to create, start or complete a sprint or to put an issue into a sprint
+### BUG-13 (Jira TB-48): No UI to create, start or complete a sprint or to put an issue into a sprint
 Severity: Major. Area: frontend (FR-10, FR-11).
 
 Steps to reproduce: log in, open a project, look for sprint controls.
@@ -90,7 +90,7 @@ Actual result: the page only has the Show filter and the points summary. `static
 Suggested fix: a "New sprint" button (name + dates), Start / Complete buttons for the selected sprint, and a sprint dropdown in the create and edit issue forms.
 Environment: as BUG-12.
 
-### BUG-14: Sprint filter never marks the active or completed sprint
+### BUG-14 (Jira TB-49): Sprint filter never marks the active or completed sprint
 Severity: Minor. Area: frontend.
 
 Steps to reproduce: start Sprint 2 and complete Sprint 1 through the API, reload the page, open the Show filter.
@@ -100,7 +100,7 @@ Cause: `loadSprints` reads `sprint.active` and `sprint.completed`, but the API r
 Suggested fix: use `sprint.status === 'Active'` and `sprint.status === 'Completed'`.
 Environment: as BUG-12.
 
-### BUG-15: Sprint dates in other formats are accepted on Python 3.11+
+### BUG-15 (Jira TB-50): Sprint dates in other formats are accepted on Python 3.11+
 Severity: Minor. Area: backend, create sprint (FR-10).
 
 Steps to reproduce: `POST /api/projects/1/sprints` with `{"name": "S", "start_date": "20261110"}` (or `"2026-W46-1"`).
