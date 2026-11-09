@@ -250,7 +250,7 @@ async function loadSprints(keepSelection = true) {
 
   state.sprints = sprints;
   const label = (sprint) =>
-    sprint.name + (sprint.active ? ' (active)' : sprint.completed ? ' (completed)' : '');
+    sprint.name + (sprint.status === 'Active' ? ' (active)' : sprint.status === 'Completed' ? ' (completed)' : '');
   const stillValid = current === 'all' || current === 'none' ||
     sprints.some((sprint) => String(sprint.id) === current);
 
@@ -323,8 +323,8 @@ function selectedSprint() {
 
 function updateSprintButtons() {
   const sprint = selectedSprint();
-  $('startSprintBtn').disabled = !sprint || sprint.active || sprint.completed;
-  $('completeSprintBtn').disabled = !sprint || !sprint.active;
+  $('startSprintBtn').disabled = !sprint || sprint.status === 'Active' || sprint.status === 'Completed';
+  $('completeSprintBtn').disabled = !sprint || sprint.status !== 'Active';
 }
 
 async function newSprint() {
@@ -388,7 +388,7 @@ async function openEdit(issue) {
 
   fillSelect($('editSprint'), [
     ['', 'No sprint (backlog)'],
-    ...state.sprints.filter((sprint) => !sprint.completed).map((sprint) => [sprint.id, sprint.name]),
+    ...state.sprints.filter((sprint) => sprint.status !== 'Completed').map((sprint) => [sprint.id, sprint.name]),
   ]);
   $('editSprint').value = issue.sprint_id ? String(issue.sprint_id) : '';
 
