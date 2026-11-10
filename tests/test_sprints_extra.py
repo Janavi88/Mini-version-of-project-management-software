@@ -80,11 +80,6 @@ def sprint_with_3_done_and_5_open(c):
     return sid, done, open_, backlog
 
 
-BUG_12 = pytest.mark.xfail(
-    strict=True,
-    reason='BUG-12: GET /projects/{id}/issues ignores ?sprint_id, so the '
-           'board '
-           'filter and the sprint summary always use every issue')
 
 
 # ---------- TB-F-016 / FR-10: create a sprint (TC-15) ----------
@@ -323,7 +318,7 @@ def test_sprint_total_points(client):
     assert (s['issue_count'], s['story_points']) == (2, 8)
 
 
-@BUG_12
+
 # AC-F-019: 3 of 8
 def test_sprint_summary_points(client):
     setup(client)
@@ -342,7 +337,7 @@ def test_unfiltered_list_still_returns_every_issue(client):
     assert len(issues(client)) == 3
 
 
-@BUG_12
+
 # AC-F-020
 def test_filter_by_sprint_shows_only_its_issues(client):
     setup(client)
@@ -351,7 +346,7 @@ def test_filter_by_sprint_shows_only_its_issues(client):
     assert {i['id'] for i in shown} == {done, open_}
 
 
-@BUG_12
+
 # AC-F-020
 def test_filter_backlog_shows_only_issues_without_sprint(client):
     setup(client)
@@ -359,7 +354,7 @@ def test_filter_backlog_shows_only_issues_without_sprint(client):
     assert [i['id'] for i in issues(client, '?sprint_id=none')] == [backlog]
 
 
-@BUG_12
+
 def test_filter_by_sprint_with_no_issues_is_empty(client):
     setup(client)
     sprint_with_3_done_and_5_open(client)
@@ -367,7 +362,6 @@ def test_filter_by_sprint_with_no_issues_is_empty(client):
     assert issues(client, '?sprint_id=%d' % empty) == []
 
 
-@BUG_12
 def test_filter_with_bad_sprint_id_returns_400(client):
     setup(client)
     sprint_with_3_done_and_5_open(client)

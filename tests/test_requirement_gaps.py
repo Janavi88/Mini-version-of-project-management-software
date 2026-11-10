@@ -2,11 +2,12 @@
 
 Sprint 1 requirements that the test plan v1.0 had no case for:
 - TB-F-007 / TB-SR-005: only the owner can delete a project (BUG-16)
-- TB-F-013: filter the issue list by status, type and assignee (BUG-17)
+- TB-F-013: filter the issue list by status, type and assignee (fixed, TB-53)
 - SAD 4.3.4: GET /api/issues/{id} returns the issue and its comments (D-06)
 
-All are xfail(strict=True): when the feature is built the test passes, strict
-mode fails the run, and the marker must be removed in the same PR.
+The tests still marked xfail(strict=True) are for features not built yet:
+when the feature is built the test passes, strict mode fails the run, and the
+marker must be removed in the same PR.
 """
 import pytest
 
@@ -43,9 +44,6 @@ def setup(c):
 
 BUG_16 = pytest.mark.xfail(
     strict=True, reason='BUG-16: no DELETE /api/projects/{id} endpoint')
-BUG_17 = pytest.mark.xfail(
-    strict=True, reason='BUG-17: GET /projects/{id}/issues ignores the '
-                        'status, type and assignee_id filters')
 
 
 # ---------- TB-F-007 / TB-SR-005: delete a project (TC-28) ----------
@@ -85,14 +83,13 @@ def test_delete_missing_project_returns_404_with_message(client):
     assert r.status_code == 404 and r.get_json()['error']
 
 
-# ---------- TB-F-013: filter the issue list ----------
+# ---------- TB-F-013: filter the issue list (fixed, TB-47 / TB-53) ----------
 
 def keys(client, query):
     return [i['key'] for i in
             client.get('/api/projects/1/issues' + query).get_json()]
 
 
-@BUG_17
 def test_filter_issues_by_status(client):
     setup(client)
     make_issue(client)
@@ -101,7 +98,6 @@ def test_filter_issues_by_status(client):
     assert keys(client, '?status=Done') == ['TB-2']
 
 
-@BUG_17
 def test_filter_issues_by_type(client):
     setup(client)
     make_issue(client, type='Bug')
@@ -109,7 +105,6 @@ def test_filter_issues_by_type(client):
     assert keys(client, '?type=Bug') == ['TB-1']
 
 
-@BUG_17
 def test_filter_issues_by_assignee(client):
     setup(client)
     me = client.get('/api/me').get_json()
@@ -119,7 +114,6 @@ def test_filter_issues_by_assignee(client):
     assert keys(client, '?assignee_id=none') == ['TB-2']
 
 
-@BUG_17
 def test_filters_combine(client):
     setup(client)
     make_issue(client, type='Bug')
@@ -129,7 +123,6 @@ def test_filters_combine(client):
     assert keys(client, '?type=Bug&status=Done') == ['TB-2']
 
 
-@BUG_17
 def test_invalid_filter_value_returns_400(client):
     setup(client)
     make_issue(client)
