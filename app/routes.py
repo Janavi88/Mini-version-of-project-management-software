@@ -197,6 +197,7 @@ def create_issue(pid):
     typ = data.get("type", "Task")
     priority = data.get("priority", "Medium")
     points = data.get("story_points")
+    assignee = data.get("assignee_id")
 
     if not title:
         return err("title is required")
@@ -212,12 +213,16 @@ def create_issue(pid):
                                or not isinstance(points, int)
                                or points not in POINTS):
         return err("story points must be one of 1, 2, 3, 5, 8, 13")
+    # null or missing means unassigned; anything else must be a real user id.
+    if assignee is not None and not valid_user_id(assignee):
+        return err("unknown user")
 
     # Running number per project: TB-1, TB-2, ...
     last = (db.session.query(func.max(Issue.number))
             .filter_by(project_id=pid).scalar() or 0)
     issue = Issue(project_id=pid, number=last + 1, title=title, type=typ,
-                  priority=priority, story_points=points)
+                  priority=priority, story_points=points,
+                  assignee_id=assignee)
     db.session.add(issue)
     db.session.commit()
     return jsonify(issue.to_dict()), 201
@@ -228,8 +233,42 @@ def create_issue(pid):
 def list_issues(pid):
     if not db.session.get(Project, pid):
         return err("project not found", 404)
-    issues = (Issue.query.filter_by(project_id=pid)
-              .order_by(Issue.number).all())
+
+    q = Issue.query.filter_by(project_id=pid)
+
+    # TB-47: sprint_id = a sprint's id, or "none" for the backlog
+    sprint_id = request.args.get("sprint_id")
+    if sprint_id is not None:
+        if sprint_id == "none":
+            q = q.filter(Issue.sprint_id.is_(None))
+        elif sprint_id.isdigit():
+            q = q.filter(Issue.sprint_id == int(sprint_id))
+        else:
+            return err("invalid sprint_id")
+
+    # TB-53: status, type, assignee_id (a user id, or "none" for unassigned)
+    status = request.args.get("status")
+    if status is not None:
+        if status not in STATUSES:
+            return err("invalid status")
+        q = q.filter(Issue.status == status)
+
+    typ = request.args.get("type")
+    if typ is not None:
+        if typ not in TYPES:
+            return err("invalid type")
+        q = q.filter(Issue.type == typ)
+
+    assignee_id = request.args.get("assignee_id")
+    if assignee_id is not None:
+        if assignee_id == "none":
+            q = q.filter(Issue.assignee_id.is_(None))
+        elif assignee_id.isdigit():
+            q = q.filter(Issue.assignee_id == int(assignee_id))
+        else:
+            return err("invalid assignee_id")
+
+    issues = q.order_by(Issue.number).all()
     return jsonify([i.to_dict() for i in issues])
 
 
