@@ -13,7 +13,10 @@ def create_app(test_config=None):
 
     # TB-SR-008: secret key comes from an environment variable.
     # "dev" is only a fallback for local development.
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev")
+    secret = os.environ.get("SECRET_KEY")
+    if not secret:
+        raise RuntimeError("SECRET_KEY environment variable is not set")
+    app.config["SECRET_KEY"] = secret
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///taskboard.db"
 
     # Tests pass their own config (e.g. in-memory DB).
