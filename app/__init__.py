@@ -11,8 +11,7 @@ def create_app(test_config=None):
     # static/ lives at the repo root, not inside app/ (TB-36)
     app = Flask(__name__, static_folder="../static", static_url_path="/static")
 
-    # TB-SR-008: secret key comes from an environment variable.
-    # "dev" is only a fallback for local development.
+    # TB-SR-008: secret key must come from the SECRET_KEY environment variable (no default).
     secret = os.environ.get("SECRET_KEY")
     if not secret:
         raise RuntimeError("SECRET_KEY environment variable is not set")
