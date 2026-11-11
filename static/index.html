@@ -70,6 +70,9 @@
       <div class="toolbar">
         <label for="sprintFilter">Show</label>
         <select id="sprintFilter" aria-label="Filter by sprint"></select>
+        <button id="newSprintBtn" class="secondary small">+ New sprint</button>
+        <button id="startSprintBtn" class="secondary small">Start sprint</button>
+        <button id="completeSprintBtn" class="secondary small">Complete sprint</button>
         <span id="sprintSummary" class="sprint-summary" aria-live="polite">0 / 0 points done</span>
       </div>
       <p id="appError" class="error" role="alert"></p>
@@ -129,6 +132,10 @@
         <div>
           <label for="editAssignee">Assignee</label>
           <select id="editAssignee"></select>
+        </div>
+        <div>
+          <label for="editSprint">Sprint</label>
+          <select id="editSprint"></select>
         </div>
       </div>
 

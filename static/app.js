@@ -259,6 +259,7 @@ async function loadSprints(keepSelection = true) {
     [...base, ...sprints.map((sprint) => [sprint.id, label(sprint)])],
     stillValid ? current : 'all'
   );
+  updateSprintButtons();
 }
 
 /* ---------- sprint summary (TB-25) ---------- */
@@ -313,8 +314,52 @@ async function loadBoard() {
   }
 }
 
-/* ---------- edit and delete issue (TB-18) ---------- */
+/* ---------- sprint management (TB-48) ---------- */
 
+function selectedSprint() {
+  const id = $('sprintFilter').value;
+  return state.sprints.find((sprint) => String(sprint.id) === id) || null;
+}
+
+function updateSprintButtons() {
+  const sprint = selectedSprint();
+  $('startSprintBtn').disabled = !sprint || sprint.active || sprint.completed;
+  $('completeSprintBtn').disabled = !sprint || !sprint.active;
+}
+
+async function newSprint() {
+  if (!state.projectId) {
+    showError('appError', new Error('Create or select a project first.'));
+    return;
+  }
+  const name = prompt('Sprint name (for example Sprint 1)');
+  if (!name || !name.trim()) return;
+
+  try {
+    const sprint = await api(`/projects/${state.projectId}/sprints`, 'POST', { name: name.trim() });
+    await loadSprints();
+    if (sprint && sprint.id) $('sprintFilter').value = String(sprint.id);
+    updateSprintButtons();
+    await loadBoard();
+  } catch (err) {
+    showError('appError', err);
+  }
+}
+
+async function sprintAction(action) {
+  const sprint = selectedSprint();
+  if (!sprint) return;
+  try {
+    await api(`/sprints/${sprint.id}/${action}`, 'POST');
+    await loadSprints();
+    updateSprintButtons();
+    await loadBoard();
+  } catch (err) {
+    showError('appError', err);
+  }
+}
+
+/* ---------- edit and delete issue (TB-18) ---------- */
 let editingIssue = null;
 
 async function openEdit(issue) {
@@ -340,6 +385,12 @@ async function openEdit(issue) {
   fillSelect($('editAssignee'), [['', 'Unassigned'], ...users.map((user) => [user.id, user.name])]);
   const currentId = issue.assignee_id ?? users.find((user) => user.name === issue.assignee)?.id;
   $('editAssignee').value = currentId ? String(currentId) : '';
+
+  fillSelect($('editSprint'), [
+    ['', 'No sprint (backlog)'],
+    ...state.sprints.filter((sprint) => !sprint.completed).map((sprint) => [sprint.id, sprint.name]),
+  ]);
+  $('editSprint').value = issue.sprint_id ? String(issue.sprint_id) : '';
 
   $('editDialog').showModal();
   $('editTitle').focus();
@@ -368,6 +419,11 @@ async function saveEdit() {
   $('editSaveBtn').disabled = true;
   try {
     await api('/issues/' + editingIssue.id, 'PATCH', payload);
+
+    const sprintId = $('editSprint').value;
+    if (sprintId && sprintId !== String(editingIssue.sprint_id ?? '')) {
+      await api(`/sprints/${sprintId}/issues`, 'POST', { issue_id: editingIssue.id });
+    }
     $('editDialog').close();
     await loadBoard();
   } catch (err) {
@@ -405,7 +461,9 @@ async function createIssue() {
   showError('createError', null);
 
   if (!state.projectId) {
-    showError('createError', new Error('Create or select a project first.'));
+    state.sprints = [];
+    fillSelect(select, base, 'all');
+    updateSprintButtons();
     return;
   }
 
@@ -472,7 +530,10 @@ $('projectSelect').onchange = async (event) => {
   await loadSprints(false); // a different project has different sprints, so reset to All issues
   await loadBoard();
 };
-$('sprintFilter').onchange = loadBoard;
+$('sprintFilter').onchange = () => { updateSprintButtons(); loadBoard(); };
+$('newSprintBtn').onclick = newSprint;
+$('startSprintBtn').onclick = () => sprintAction('start');
+$('completeSprintBtn').onclick = () => sprintAction('complete');
 $('newProjectBtn').onclick = newProject;
 
 $('addIssueBtn').onclick = createIssue;
