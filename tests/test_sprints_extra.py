@@ -11,8 +11,6 @@ filter the board calls.
 Known bugs are marked xfail(strict=True). When a bug is fixed its test starts
 passing, strict mode turns that into a failure, and the marker must be removed.
 """
-import sys
-
 import pytest
 
 from app import create_app
@@ -103,10 +101,6 @@ def test_impossible_dates_rejected(client, value):
     assert make_sprint(client, start_date=value).status_code == 400
 
 
-@pytest.mark.xfail(
-    sys.version_info >= (3, 11), strict=True,
-    reason='BUG-15: on Python 3.11+ date.fromisoformat also accepts 20261110 '
-           'and 2026-W46-1, although the API says dates must be YYYY-MM-DD')
 @pytest.mark.parametrize('value', ['20261110', '2026-W46-1'])
 def test_only_yyyy_mm_dd_dates_accepted(client, value):
     setup(client)
