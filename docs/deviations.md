@@ -37,7 +37,7 @@ Doc = a document needs correcting.
 | Sprint 1 manual pass, bug tickets | 29-Oct | 01-Nov (BUG-01..BUG-11 filed) |
 | Sprint 1 regression and summary | 30-Oct to 31-Oct | Report 01-Nov; retest of fixes 09-Nov |
 | Sprint 2 test cases written (FR-10..FR-13) | 02-Nov | 09-Nov (`tests/test_sprints_extra.py`, PR #17) |
-| Full regression, bugs raised | 03-Nov to 04-Nov | Sprint 2 bugs raised 09-Nov (BUG-12..BUG-17); full regression from a clean clone 12-Nov, after PRs #14–#28 merged |
+| Full regression, bugs raised | 03-Nov to 04-Nov | Sprint 2 bugs raised 09-Nov (BUG-12..BUG-17); full regression from a clean clone 12-Nov, after PRs #14–#29 merged |
 | NFR checks (TC-26, TC-27, flake8) | not dated | 09-Nov (PR #18) |
 | Sprint 2 test summary | 07-Nov | 12-Nov: `docs/testing/Final_Test_Report.md` |
 
@@ -50,7 +50,7 @@ Doc = a document needs correcting.
 | BUG-12 | TB-47 | Board filter and sprint summary ignore the selected sprint | Major | Fixed |
 | BUG-13 | TB-48 | No UI to create, start or complete a sprint | Major | Fixed |
 | BUG-14 | TB-49 | Sprint filter never marks the active or completed sprint | Minor | Fixed |
-| BUG-15 | TB-50 | Sprint dates accept formats other than YYYY-MM-DD | Minor | **Open** |
+| BUG-15 | TB-50 | Sprint dates accept formats other than YYYY-MM-DD | Minor | Fixed |
 | BUG-16 | TB-52 | No endpoint to delete a project (owner only) | Major | Fixed |
 | BUG-17 | TB-53 | Issue list ignores status, type and assignee filters | Major | Fixed |
 | — | TB-51 | No Dockerfile: app cannot run as a Docker image | Major | Fixed |

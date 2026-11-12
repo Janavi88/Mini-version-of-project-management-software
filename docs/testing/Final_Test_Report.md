@@ -3,14 +3,14 @@
 | | |
 |---|---|
 | Ticket | TB-31 (Member 3, QA) |
-| Build tested | `develop` at `4b0252d` (after PRs #14 to #28 were merged) |
+| Build tested | `develop` at `28b58d1` (after PRs #14 to #29 were merged) |
 | Date | 12-11-2026 |
 | Tester | Member 3 (Harsh) |
 | Plan | TaskBoard Software Test Plan v1.0, with the v1.1 changes in `docs/testing/Test_Plan_v1.1_Changes.md` |
 
 ## 1. Summary
 
-The Sprint 2 build works. Every Major bug from Sprint 1 and Sprint 2 is fixed and was retested. The full regression from a clean clone passed, apart from two known gaps.
+The Sprint 2 build works. Every bug filed in Sprint 1 and Sprint 2 is fixed and was retested. The full regression from a clean clone passed; one known gap is left (D-06).
 
 | Count | Number |
 |---|---|
@@ -18,8 +18,8 @@ The Sprint 2 build works. Every Major bug from Sprint 1 and Sprint 2 is fixed an
 | Executed | 28 (TC-29 only partly) |
 | Passed | 27 |
 | Not run | 1 (TC-25, usability trial with 3 observers) |
-| Automated tests | 169 passed, 0 failed, 4 expected failures (xfail) |
-| Open bugs | 0 Critical, 0 Major, 1 Minor (TB-50) |
+| Automated tests | 171 passed, 0 failed, 2 expected failures (xfail) |
+| Open bugs | 0 Critical, 0 Major, 0 Minor |
 | Open deviations | D-06 (`GET /api/issues/{id}` missing) |
 
 **Exit criteria (from the Test Plan)**
@@ -45,22 +45,22 @@ The Sprint 2 build works. Every Major bug from Sprint 1 and Sprint 2 is fixed an
 | Docker | Docker Desktop, server 29.9.2 |
 | Secret key | `SECRET_KEY` set to a test value (the app refuses to start without it, by design: TB-45) |
 
+The manual regression and Docker check ran on `4b0252d`. PR #29 (TB-50) was merged afterwards; it only changes sprint date checks, so on `28b58d1` the automated tests were run again (on Python 3.11 and 3.13) and TB-50 was retested over the API.
+
 ## 3. Automated checks
 
 | Check | Command | Result |
 |---|---|---|
-| Unit and API tests | `pytest -v` | **169 passed, 4 xfailed** (18.6 s) |
-| Style | `flake8 app tests tools` | 20 findings: 11 in `app/`, 9 in `tests/test_sprints.py`. The extra blank lines in `tests/test_sprints_extra.py` and `tests/test_requirement_gaps.py` were fixed on this branch. |
+| Unit and API tests | `pytest -v` | **171 passed, 2 xfailed** (24 s) |
+| Style | `flake8 app tests tools` | 19 findings: 10 in `app/`, 9 in `tests/test_sprints.py`. The extra blank lines in `tests/test_sprints_extra.py` and `tests/test_requirement_gaps.py` were fixed on this branch. |
 | Performance, TC-26 | `python tools/perf_check.py` | **Pass**: 1000 issues, 200 of 200 list calls under 500 ms, p95 = 34.6 ms |
 
-The 4 expected failures are known gaps that are not fixed yet:
+The 2 expected failures are a known gap that is not fixed yet:
 
 | Test | Reason |
 |---|---|
 | `test_get_issue_with_comments` | D-06: `GET /api/issues/{id}` is not implemented |
 | `test_deleted_issue_url_returns_404` | D-06: so a deleted issue's URL gives 405, not 404 (AC-F-011) |
-| `test_only_yyyy_mm_dd_dates_accepted[20261110]` | TB-50 (BUG-15): Python 3.11+ also accepts compact dates |
-| `test_only_yyyy_mm_dd_dates_accepted[2026-W46-1]` | TB-50 (BUG-15): and week dates |
 
 ## 4. Bug retest
 
@@ -69,11 +69,11 @@ Each fix was retested in the browser or over HTTP against the clean-clone build.
 | Jira | Our ID | Bug | Severity | Retest on 12-Nov | Result |
 |---|---|---|---|---|---|
 | TB-45 | BUG-10 | Secret key falls back to "dev" | Minor | Without `SECRET_KEY` the app stops with "SECRET_KEY environment variable is not set" (also in Docker). With it, logins survive a restart. | **Fixed** |
-| TB-46 | BUG-11 | README saved as UTF-16 | Minor | README is now plain UTF-8. The full README text is in PR #27, still open. | **Fixed** |
+| TB-46 | BUG-11 | README saved as UTF-16 | Minor | README is now plain UTF-8. The full README text is in PR #30, still open. | **Fixed** |
 | TB-47 | BUG-12 | Filter and summary ignore the sprint | Major | Sprint with 3 points Done and 5 open shows "3 / 8 points done". Backlog shows only issues with no sprint. | **Fixed** |
 | TB-48 | BUG-13 | No sprint UI | Major | **+ New sprint**, the Sprint box in **Edit**, **Start sprint** and **Complete sprint** all work. The buttons are disabled when the action is not allowed. | **Fixed** |
 | TB-49 | BUG-14 | No active or completed label | Minor | The filter shows "Sprint 1 (active)", then "Sprint 1 (completed)". | **Fixed** |
-| TB-50 | BUG-15 | Non YYYY-MM-DD dates accepted | Minor | `20261110` and `2026-W46-1` still give 201 | **Open** |
+| TB-50 | BUG-15 | Non YYYY-MM-DD dates accepted | Minor | Retested on `28b58d1` (PR #29): `20261110` and `2026-W46-1` give 400 "dates must be YYYY-MM-DD"; `2026-11-10` gives 201 | **Fixed** |
 | TB-51 | — | No Dockerfile | Major | `docker build` works. `docker run -e SECRET_KEY=… -p 5077:5000` serves the page (200) and register works (201). | **Fixed** |
 | TB-52 | BUG-16 | No project delete | Major | Owner gets 200 and the project and its issues are gone (404). Another user gets 403, logged out gets 401, and a second delete gives 404. API only, no UI button. | **Fixed** |
 | TB-53 | BUG-17 | Status, type and assignee filters ignored | Major | `?status=`, `?type=`, `?assignee_id=` (also `none`) and combined filters return the right issues. A bad value gives 400. | **Fixed** |
@@ -120,7 +120,7 @@ Reliability (TB-NF-005): after a server restart the user is still logged in and 
 
 | # | Observation | Suggestion |
 |---|---|---|
-| O-1 | Without `SECRET_KEY` in the shell, `pytest` gives 168 errors (CI sets the key itself). The README in PR #27 asks for the key before running the tests, so this is covered once #27 is merged. | Optional: set a test key in a `tests/conftest.py` |
+| O-1 | Without `SECRET_KEY` in the shell, `pytest` gives 168 errors (CI sets the key itself). The README in PR #30 should ask for the key before running the tests. | Optional: set a test key in a `tests/conftest.py` |
 | O-2 | `.dockerignore` does not exclude `instance/`, so a local `taskboard.db` gets copied into the image when one exists. | Add `instance/` to `.dockerignore` |
 | O-3 | The Docker container keeps its database inside the container, so data is lost when the container is removed. | README note, or `-v` volume for `instance/` |
 | O-4 | The sprint name prompt and the project prompts use the browser's `prompt()` box, so there is no field for sprint dates in the UI. Dates can be set through the API. | Fine for this version; a form later |
@@ -131,8 +131,8 @@ Reliability (TB-NF-005): after a server restart the user is still logged in and 
 |---|---|---|
 | 1 | Run TC-25, the usability trial | Member 3 with a new user and 3 observers |
 | 2 | Run TC-01 to TC-14 in Firefox and Edge (TC-29) | Member 3 |
-| 3 | Fix TB-50 (dates) and D-06 (`GET /api/issues/{id}`), or record them as known limits | Backend (Member 1) |
-| 4 | Merge PR #27 (README) | Janavi |
+| 3 | Build D-06 (`GET /api/issues/{id}`), or record it as a known limit | Backend (Member 1) |
+| 4 | Merge PR #30 (README) | Janavi |
 | 5 | Merge `develop` into `main` for the final release | Janavi |
-| 6 | Clear the 20 remaining flake8 findings in `app/` and `tests/test_sprints.py` | Their authors |
+| 6 | Clear the 19 remaining flake8 findings in `app/` and `tests/test_sprints.py` | Their authors |
 | 7 | Regenerate the test plan PDF v1.1 and update SAD §4.3.4 and §4.3.5 | Member 4 |
