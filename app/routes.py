@@ -7,7 +7,7 @@ from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db
-from .models import Comment, Issue, Project, User
+from .models import Comment, Issue, Project, Sprint, User
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 web = Blueprint("web", __name__)  # serves the web page at "/" (TB-36)
@@ -142,6 +142,7 @@ def list_users():
 # ---------------------------------------------------------------
 # TB-15  Create a project with a unique key   (TB-F-005)
 # TB-16  List projects                         (TB-F-006)
+# TB-52  Delete a project, owner only          (TB-F-007, TB-SR-005)
 # ---------------------------------------------------------------
 @bp.post("/projects")
 @login_required
@@ -176,6 +177,27 @@ def list_projects():
     projects = Project.query.order_by(Project.id).all()
     return jsonify([{"id": p.id, "key": p.key, "name": p.name,
                      "owner_id": p.owner_id} for p in projects])
+
+
+@bp.delete("/projects/<int:pid>")
+@login_required
+def delete_project(pid):
+    project = db.session.get(Project, pid)
+    if not project:
+        return err("project not found", 404)
+    if project.owner_id != session["user_id"]:
+        return err("only the project owner can delete it", 403)
+
+    # Children first so the delete cannot hit a foreign key error.
+    issue_ids = [i.id for i in Issue.query.filter_by(project_id=pid)]
+    if issue_ids:
+        Comment.query.filter(Comment.issue_id.in_(issue_ids)).delete(
+            synchronize_session=False)
+    Issue.query.filter_by(project_id=pid).delete()
+    Sprint.query.filter_by(project_id=pid).delete()
+    db.session.delete(project)
+    db.session.commit()
+    return jsonify(ok=True)
 
 
 # ---------------------------------------------------------------

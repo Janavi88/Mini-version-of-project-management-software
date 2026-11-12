@@ -1,7 +1,7 @@
 """Requirement gaps found while writing the deviations log (TB-31 / TB-32).
 
 Sprint 1 requirements that the test plan v1.0 had no case for:
-- TB-F-007 / TB-SR-005: only the owner can delete a project (BUG-16)
+- TB-F-007 / TB-SR-005: only the owner can delete a project (fixed, TB-52)
 - TB-F-013: filter the issue list by status, type and assignee (fixed, TB-53)
 - SAD 4.3.4: GET /api/issues/{id} returns the issue and its comments (D-06)
 
@@ -42,13 +42,8 @@ def setup(c):
     c.post('/api/projects', json={'key': 'TB', 'name': 'TaskBoard'})
 
 
-BUG_16 = pytest.mark.xfail(
-    strict=True, reason='BUG-16: no DELETE /api/projects/{id} endpoint')
-
-
 # ---------- TB-F-007 / TB-SR-005: delete a project (TC-28) ----------
 
-@BUG_16
 def test_owner_can_delete_project(app, client):
     setup(client)
     make_issue(client)
@@ -59,7 +54,6 @@ def test_owner_can_delete_project(app, client):
         assert Issue.query.count() == 0      # its issues are removed too
 
 
-@BUG_16
 def test_non_owner_delete_gets_403(app, client):
     setup(client)
     client.post('/api/logout')
@@ -69,14 +63,12 @@ def test_non_owner_delete_gets_403(app, client):
         assert db.session.get(Project, 1) is not None
 
 
-@BUG_16
 def test_delete_project_requires_login(client):
     setup(client)
     client.post('/api/logout')
     assert client.delete('/api/projects/1').status_code == 401
 
 
-@BUG_16
 def test_delete_missing_project_returns_404_with_message(client):
     setup(client)
     r = client.delete('/api/projects/99')
