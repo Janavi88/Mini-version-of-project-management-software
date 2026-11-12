@@ -11,8 +11,6 @@ filter the board calls.
 Known bugs are marked xfail(strict=True). When a bug is fixed its test starts
 passing, strict mode turns that into a failure, and the marker must be removed.
 """
-import sys
-
 import pytest
 
 from app import create_app
@@ -80,8 +78,6 @@ def sprint_with_3_done_and_5_open(c):
     return sid, done, open_, backlog
 
 
-
-
 # ---------- TB-F-016 / FR-10: create a sprint (TC-15) ----------
 
 def test_sprint_with_same_start_and_end_date_is_allowed(client):
@@ -105,10 +101,6 @@ def test_impossible_dates_rejected(client, value):
     assert make_sprint(client, start_date=value).status_code == 400
 
 
-@pytest.mark.xfail(
-    sys.version_info >= (3, 11), strict=True,
-    reason='BUG-15: on Python 3.11+ date.fromisoformat also accepts 20261110 '
-           'and 2026-W46-1, although the API says dates must be YYYY-MM-DD')
 @pytest.mark.parametrize('value', ['20261110', '2026-W46-1'])
 def test_only_yyyy_mm_dd_dates_accepted(client, value):
     setup(client)
@@ -318,7 +310,6 @@ def test_sprint_total_points(client):
     assert (s['issue_count'], s['story_points']) == (2, 8)
 
 
-
 # AC-F-019: 3 of 8
 def test_sprint_summary_points(client):
     setup(client)
@@ -337,7 +328,6 @@ def test_unfiltered_list_still_returns_every_issue(client):
     assert len(issues(client)) == 3
 
 
-
 # AC-F-020
 def test_filter_by_sprint_shows_only_its_issues(client):
     setup(client)
@@ -346,13 +336,11 @@ def test_filter_by_sprint_shows_only_its_issues(client):
     assert {i['id'] for i in shown} == {done, open_}
 
 
-
 # AC-F-020
 def test_filter_backlog_shows_only_issues_without_sprint(client):
     setup(client)
     sid, done, open_, backlog = sprint_with_3_done_and_5_open(client)
     assert [i['id'] for i in issues(client, '?sprint_id=none')] == [backlog]
-
 
 
 def test_filter_by_sprint_with_no_issues_is_empty(client):

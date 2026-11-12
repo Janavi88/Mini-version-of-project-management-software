@@ -1,4 +1,5 @@
 """Sprints: TB-23 (create sprints, add issues) and TB-24 (start, complete)."""
+import re
 from datetime import date
 
 from flask import Blueprint, jsonify
@@ -9,16 +10,20 @@ from .routes import MAX_NAME, body, err, login_required, text
 
 sprints_bp = Blueprint("sprints", __name__, url_prefix="/api")
 
+# TB-50: Python 3.11+ date.fromisoformat also accepts 20261107, 2026-W45-6
+# and similar, so check the exact YYYY-MM-DD shape first.
+DATE_RE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+
 
 def parse_date(value):
-    """None -> (None, True); 'YYYY-MM-DD' -> (date, True); else (None, False)."""
+    """None -> (None, True); strict YYYY-MM-DD -> (date, True); else False."""
     if value is None:
         return None, True
-    if not isinstance(value, str):
+    if not isinstance(value, str) or not DATE_RE.fullmatch(value):
         return None, False
     try:
         return date.fromisoformat(value), True
-    except ValueError:
+    except ValueError:  # right shape, impossible date such as 2026-02-31
         return None, False
 
 
