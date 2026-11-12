@@ -16,3 +16,5 @@ jobs:
           python-version: '3.11'
       - run: pip install -r requirements.txt
       - run: pytest -v
+        env:
+          SECRET_KEY: ci-test-key
