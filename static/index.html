@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TaskBoard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- TB-36: was /style.css -->
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- ================= LOGIN / REGISTER ================= -->
+  <section id="auth">
+    <div class="auth-brand">
+      <div class="brand"><span class="logo">T</span><span>TaskBoard</span></div>
+      <h1>Plan work.<br>Ship it together.</h1>
+      <p>Projects, sprints and a Kanban board for small teams, kept simple.</p>
+    </div>
+
+    <div class="auth-form">
+      <div class="auth-card">
+        <h2>Welcome</h2>
+        <p class="auth-sub">Log in, or create an account to get started.</p>
+
+        <label for="name">Name <span class="hint">(register only)</span></label>
+        <input id="name" placeholder="Your name" autocomplete="name">
+
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+
+        <div class="row">
+          <button id="loginBtn">Login</button>
+          <button id="registerBtn" class="secondary">Register</button>
+        </div>
+        <p id="authError" class="error" role="alert"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= APP (after login) ================= -->
+  <section id="app" hidden>
+    <aside class="sidebar">
+      <div class="brand"><span class="logo">T</span><span>TaskBoard</span></div>
+
+      <div class="side-section grow">
+        <p class="side-label">Current project</p>
+        <div class="project-card">
+          <strong id="projectKey">--</strong>
+          <span id="projectName">No project</span>
+        </div>
+        <button id="newProjectBtn" class="ghost">+ New project</button>
+      </div>
+
+      <div class="side-user">
+        <span id="whoAvatar" class="avatar"></span>
+        <span id="who"></span>
+        <button id="logoutBtn" class="ghost small">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h1>Board</h1>
+        <select id="projectSelect" aria-label="Select project"></select>
+      </div>
+      <div class="toolbar">
+        <label for="sprintFilter">Show</label>
+        <select id="sprintFilter" aria-label="Filter by sprint"></select>
+        <button id="newSprintBtn" class="secondary small">+ New sprint</button>
+        <button id="startSprintBtn" class="secondary small">Start sprint</button>
+        <button id="completeSprintBtn" class="secondary small">Complete sprint</button>
+        <span id="sprintSummary" class="sprint-summary" aria-live="polite">0 / 0 points done</span>
+      </div>
+      <p id="appError" class="error" role="alert"></p>
+
+      <!-- Create issue panel (TB-39) -->
+      <div class="create-panel">
+        <input id="newTitle" placeholder="What needs to be done?" aria-label="Issue title">
+        <select id="newType" aria-label="Type">
+          <option>Story</option><option selected>Task</option><option>Bug</option><option>Epic</option>
+        </select>
+        <select id="newPriority" aria-label="Priority">
+          <option>High</option><option selected>Medium</option><option>Low</option>
+        </select>
+        <select id="newPoints" aria-label="Story points">
+          <option value="">No points</option>
+          <option>1</option><option>2</option><option>3</option>
+          <option>5</option><option>8</option><option>13</option>
+        </select>
+        <select id="newAssignee" aria-label="Assignee"></select>
+        <button id="addIssueBtn">Add issue</button>
+      </div>
+      <p id="createError" class="error" role="alert"></p>
+
+      <div id="board"></div>
+    </main>
+  </section>
+
+  <!-- Edit issue dialog (TB-18) -->
+  <dialog id="editDialog" class="dialog">
+    <div class="dialog-body">
+      <h3 id="editHeading">Edit issue</h3>
+
+      <label for="editTitle">Title</label>
+      <input id="editTitle" placeholder="Issue title">
+
+      <div class="dialog-grid">
+        <div>
+          <label for="editType">Type</label>
+          <select id="editType">
+            <option>Story</option><option>Task</option><option>Bug</option><option>Epic</option>
+          </select>
+        </div>
+        <div>
+          <label for="editPriority">Priority</label>
+          <select id="editPriority">
+            <option>High</option><option>Medium</option><option>Low</option>
+          </select>
+        </div>
+        <div>
+          <label for="editPoints">Story points</label>
+          <select id="editPoints">
+            <option value="">None</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>5</option><option>8</option><option>13</option>
+          </select>
+        </div>
+        <div>
+          <label for="editAssignee">Assignee</label>
+          <select id="editAssignee"></select>
+        </div>
+        <div>
+          <label for="editSprint">Sprint</label>
+          <select id="editSprint"></select>
+        </div>
+      </div>
+
+      <p id="editError" class="error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="editCancelBtn" class="secondary">Cancel</button>
+        <button id="editSaveBtn">Save changes</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- TB-36: was /app.js -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
