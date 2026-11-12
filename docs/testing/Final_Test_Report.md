@@ -15,8 +15,8 @@ The Sprint 2 build works. Every bug filed in Sprint 1 and Sprint 2 is fixed and 
 | Count | Number |
 |---|---|
 | Manual test cases planned (TC-01 to TC-29) | 29 |
-| Executed | 28 (TC-29 only partly) |
-| Passed | 27 |
+| Executed | 28 |
+| Passed | 28 |
 | Not run | 1 (TC-25, usability trial with 3 observers) |
 | Automated tests | 171 passed, 0 failed, 2 expected failures (xfail) |
 | Open bugs | 0 Critical, 0 Major, 0 Minor |
@@ -26,13 +26,13 @@ The Sprint 2 build works. Every bug filed in Sprint 1 and Sprint 2 is fixed and 
 
 | Criterion | Met? |
 |---|---|
-| 100% of planned test cases executed | **No**: TC-25 not run; TC-29 run in Chromium only |
+| 100% of planned test cases executed | **No**: TC-25 (usability trial) not run yet |
 | All automated tests pass in CI | Yes: CI is green on every merged PR |
 | 0 Critical and 0 Major defects open | Yes |
 | All Must-priority requirements verified | Yes, except the D-06 part of TB-F-011 (see §5) |
 | Final test report produced | Yes (this document) |
 
-**Verdict:** ready for the sprint review, with two things left before final sign-off: run TC-25 and TC-29, and merge `develop` into `main` (see §7).
+**Verdict:** ready for the sprint review, with two things left before final sign-off: run TC-25, and merge `develop` into `main` (see §7).
 
 ## 2. Environment
 
@@ -41,7 +41,7 @@ The Sprint 2 build works. Every bug filed in Sprint 1 and Sprint 2 is fixed and 
 | Clean clone | `git clone -b develop`, new virtual environment, `pip install -r requirements.txt` |
 | Python | 3.11.9 (same as CI) for the clean-clone run; 3.13 on the developer copy |
 | OS | Windows 11; Linux via GitHub Actions CI (ubuntu-latest) |
-| Browser | Chromium (the built-in browser pane), screen 800×600 |
+| Browsers | Chromium (the built-in browser pane, 800×600). For TC-29: Microsoft Edge 157, Firefox 150 and WebKit 26.4 (the Safari engine), driven by Playwright at 1280×800 |
 | Docker | Docker Desktop, server 29.9.2 |
 | Secret key | `SECRET_KEY` set to a test value (the app refuses to start without it, by design: TB-45) |
 
@@ -112,7 +112,7 @@ Run on a fresh database in the clean-clone build.
 | TC-26 | Performance | Pass | p95 34.6 ms (see §3) |
 | TC-27 | Portability | Pass | Windows clean clone on Python 3.11, Linux CI, and Docker image all work. macOS not tested. |
 | TC-28 | Delete project (owner only) | Pass | See TB-52 in §4 |
-| TC-29 | Other browsers | **Partly** | Chromium passes. Firefox and Edge still to do. |
+| TC-29 | Other browsers | Pass | TC-01 to TC-14, TC-20, TC-23 and TC-24 run through the UI in Edge 157, Firefox 150 and WebKit 26.4: 17 of 17 pass in each |
 
 Reliability (TB-NF-005): after a server restart the user is still logged in and all 3 issues are still there.
 
@@ -124,15 +124,15 @@ Reliability (TB-NF-005): after a server restart the user is still logged in and 
 | O-2 | `.dockerignore` does not exclude `instance/`, so a local `taskboard.db` gets copied into the image when one exists. | Add `instance/` to `.dockerignore` |
 | O-3 | The Docker container keeps its database inside the container, so data is lost when the container is removed. | README note, or `-v` volume for `instance/` |
 | O-4 | The sprint name prompt and the project prompts use the browser's `prompt()` box, so there is no field for sprint dates in the UI. Dates can be set through the API. | Fine for this version; a form later |
+| O-5 | After a page reload the board opens the first project in the list, not the one the user was last working in. | Remember the last project (for example in `localStorage`) |
 
 ## 7. Still to do before sign-off
 
 | # | Item | Owner |
 |---|---|---|
 | 1 | Run TC-25, the usability trial | Member 3 with a new user and 3 observers |
-| 2 | Run TC-01 to TC-14 in Firefox and Edge (TC-29) | Member 3 |
-| 3 | Build D-06 (`GET /api/issues/{id}`), or record it as a known limit | Backend (Member 1) |
-| 4 | Merge PR #30 (README) | Janavi |
-| 5 | Merge `develop` into `main` for the final release | Janavi |
-| 6 | Clear the 19 remaining flake8 findings in `app/` and `tests/test_sprints.py` | Their authors |
-| 7 | Regenerate the test plan PDF v1.1 and update SAD §4.3.4 and §4.3.5 | Member 4 |
+| 2 | Build D-06 (`GET /api/issues/{id}`), or record it as a known limit | Backend (Member 1) |
+| 3 | Merge PR #30 (README) | Janavi |
+| 4 | Merge `develop` into `main` for the final release | Janavi |
+| 5 | Clear the 19 remaining flake8 findings in `app/` and `tests/test_sprints.py` | Their authors |
+| 6 | Regenerate the test plan PDF v1.1 and update SAD §4.3.4 and §4.3.5 | Member 4 |
